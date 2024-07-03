@@ -4,7 +4,7 @@ import "./index.css";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { RouterProvider, createHashRouter } from "react-router-dom";
 import ErrorPage from "./ErrorPage";
 import Dashboard from "./routes/Dashboard";
 import DataEntry from "./routes/DataEntry";
@@ -14,7 +14,7 @@ import Main from "./Main";
 
 import "@glideapps/glide-data-grid/dist/index.css";
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   {
     path: "/",
     element: <Main />,
