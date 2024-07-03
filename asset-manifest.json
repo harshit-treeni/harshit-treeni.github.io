@@ -1,0 +1,23 @@
+{
+  "files": {
+    "main.css": "/static/css/main.5290b518.css",
+    "main.js": "/static/js/main.1477b1b5.js",
+    "static/js/301.1c15c9ce.chunk.js": "/static/js/301.1c15c9ce.chunk.js",
+    "static/js/82.1143a89a.chunk.js": "/static/js/82.1143a89a.chunk.js",
+    "static/media/avatar.svg": "/static/media/avatar.5d2ce4f23e4e7d0937c23be2881e2e1b.svg",
+    "static/media/wipro_logo.svg": "/static/media/wipro_logo.67ceb43e695f38c6783180440d40312f.svg",
+    "static/media/resustain_logo.svg": "/static/media/resustain_logo.51a99fa1ac537f714efb38d721947282.svg",
+    "static/media/flexmonster-icons.svg": "/static/media/flexmonster-icons.24128e9f7463c26fe366.svg",
+    "static/media/flexmonster-icons.woff?v2.8.19": "/static/media/flexmonster-icons.b8825ed460468b9d7bea.woff",
+    "static/media/flexmonster-icons.ttf?v2.8.19": "/static/media/flexmonster-icons.5682228d9dc3dea0d1ee.ttf",
+    "index.html": "/index.html",
+    "main.5290b518.css.map": "/static/css/main.5290b518.css.map",
+    "main.1477b1b5.js.map": "/static/js/main.1477b1b5.js.map",
+    "301.1c15c9ce.chunk.js.map": "/static/js/301.1c15c9ce.chunk.js.map",
+    "82.1143a89a.chunk.js.map": "/static/js/82.1143a89a.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.5290b518.css",
+    "static/js/main.1477b1b5.js"
+  ]
+}
