@@ -1,0 +1,645 @@
+import clsx from "clsx";
+
+import ArrowIcon from "../icons/ArrowIcon";
+import PieChartIcon from "../icons/PieChartIcon";
+import ElectricityIcon from "../icons/ElectricityIcon";
+import BoxesIcon from "../icons/BoxesIcon";
+import HideDockIcon from "../icons/HideDockIcon";
+import ShowDockIcon from "../icons/ShowDockIcon";
+import TVIcon from "../icons/TVIcon";
+import WaterIcon from "../icons/WaterIcon";
+import BarGraphIcon from "../icons/BarGraphIcon";
+import BellIcon from "../icons/BellIcon";
+import DocumentIcon from "../icons/DocumentIcon";
+import EditIcon from "../icons/EditIcon";
+import PeopleIcon from "../icons/PeopleIcon";
+import SupplyChainIcon from "../icons/SupplyChainIcon";
+import SearchIcon from "../icons/SearchIcon";
+
+import { useReducer } from "react";
+
+import { ReactComponent as Avatar } from "./../avatar.svg";
+import { ReactComponent as WiproLogo } from "./../logos/wipro_logo.svg";
+import { IoHomeOutline } from "react-icons/io5";
+import { useLocation } from "react-router-dom";
+
+const dataMngmtNavObjs = [
+  {
+    id: 1,
+    Icon: EditIcon,
+    label: "Data Analytics",
+    path: "/data-management/data-analytics",
+  },
+  {
+    id: 2,
+    Icon: BarGraphIcon,
+    label: "Data Entry",
+    path: "/data-management/data-entry",
+  },
+  {
+    id: 3,
+    Icon: BoxesIcon,
+    label: "To-Do-List",
+    path: "/data-management/to-do-list",
+  },
+  {
+    id: 4,
+    Icon: PeopleIcon,
+    label: "SDG's",
+    path: "/data-management/sdgs",
+  },
+  {
+    id: 5,
+    Icon: ElectricityIcon,
+    label: "Data Status Report",
+    path: "/data-management/data-status-report",
+  },
+  {
+    id: 6,
+    Icon: WaterIcon,
+    label: "Data Review",
+    path: "/data-management/data-review",
+  },
+];
+
+const supChainNavObjs = [
+  {
+    id: 1,
+    Icon: EditIcon,
+    label: "Suppliers",
+    path: "/supply-chain/suppliers",
+  },
+  {
+    id: 2,
+    Icon: BarGraphIcon,
+    label: "Assessments",
+    path: "/supply-chain/assessments",
+  },
+];
+
+const stratNavObjs = [
+  {
+    id: 1,
+    Icon: EditIcon,
+    label: "Goals",
+    path: "/strategy/goals",
+  },
+  {
+    id: 2,
+    Icon: BarGraphIcon,
+    label: "Risk Universe",
+    path: "/strategy/risk-universe",
+  },
+  {
+    id: 3,
+    Icon: BarGraphIcon,
+    label: "Risk Inventory",
+    path: "/strategy/risk-inventory",
+  },
+];
+
+const disclosureNavObjs = [
+  {
+    id: 1,
+    Icon: EditIcon,
+    label: "Publishers",
+    path: "/disclosures/publishers",
+  },
+  {
+    id: 2,
+    Icon: BarGraphIcon,
+    label: "Templates",
+    path: "/disclosures/templates",
+  },
+];
+
+function SidebarReducer(state, action) {
+  switch (action.type) {
+    case "show/hide":
+      return {
+        ...state,
+        isCollapsed: !state.isCollapsed,
+        nav: {
+          ...state.nav,
+          dataMgmt: true,
+          supChain: true,
+          strat: true,
+          disc: true,
+        },
+      };
+
+    case "dataMgmt click expanded":
+      return {
+        ...state,
+        nav: {
+          ...state.nav,
+          dataMgmt: !state.nav.dataMgmt,
+        },
+      };
+
+    case "supChain click expanded":
+      return {
+        ...state,
+        nav: {
+          ...state.nav,
+          supChain: !state.nav.supChain,
+        },
+      };
+
+    case "strat click expanded":
+      return {
+        ...state,
+        nav: {
+          ...state.nav,
+          strat: !state.nav.strat,
+        },
+      };
+
+    case "disc click expanded":
+      return {
+        ...state,
+        nav: {
+          ...state.nav,
+          disc: !state.nav.disc,
+        },
+      };
+
+    case "dataMgmt click collapsed":
+      return {
+        ...state,
+        isCollapsed: false,
+        nav: {
+          ...state.nav,
+          dataMgmt: false,
+          supChain: true,
+          strat: true,
+          disc: true,
+        },
+      };
+
+    case "supChain click collapsed":
+      return {
+        ...state,
+        isCollapsed: false,
+        nav: {
+          ...state.nav,
+          dataMgmt: true,
+          supChain: false,
+          strat: true,
+          disc: true,
+        },
+      };
+
+    case "strat click collapsed":
+      return {
+        ...state,
+        isCollapsed: false,
+        nav: {
+          ...state.nav,
+          dataMgmt: true,
+          supChain: true,
+          strat: false,
+          disc: true,
+        },
+      };
+
+    case "disc click collapsed":
+      return {
+        ...state,
+        isCollapsed: false,
+        nav: {
+          ...state.nav,
+          dataMgmt: true,
+          supChain: true,
+          strat: true,
+          disc: false,
+        },
+      };
+
+    default:
+      throw new Error("Sidebar dispatch called with wrong type " + action.type);
+  }
+}
+
+export default function Sidebar() {
+  const location = useLocation();
+  const [state, dispatch] = useReducer(SidebarReducer, {
+    isCollapsed: false,
+    nav: {
+      dataMgmt: location.pathname.split("/")[1] !== "data-management",
+      supChain: location.pathname.split("/")[1] !== "supply-chain",
+      strat: location.pathname.split("/")[1] !== "strategy",
+      disc: location.pathname.split("/")[1] !== "disclosures",
+    },
+  });
+
+  const { isCollapsed, nav } = state;
+
+  return (
+    <div
+      className={clsx("bg-white overflow-y-auto relative h-vh", {
+        "w-[120px]": isCollapsed,
+        "w-[270px]": !isCollapsed,
+      })}
+    >
+      <SidebarHeader isCollapsed={isCollapsed} />
+
+      <SidebarHomeItem
+        isCollapsed={isCollapsed}
+        showHideDock={() => dispatch({ type: "show/hide" })}
+      />
+
+      {isCollapsed ? (
+        <>
+          <CollapsedNavItem
+            Icon={BoxesIcon}
+            label="Dashboard"
+            path="/dashboard"
+          />
+          <CollapsedNavItem
+            Icon={PieChartIcon}
+            label="Data Management"
+            onClick={() => dispatch({ type: "dataMgmt click collapsed" })}
+          />
+          <CollapsedNavItem
+            Icon={SupplyChainIcon}
+            label="Supply Chain"
+            onClick={() => dispatch({ type: "supChain click collapsed" })}
+          />
+          <CollapsedNavItem
+            Icon={TVIcon}
+            label="Strategy"
+            onClick={() => dispatch({ type: "strat click collapsed" })}
+          />
+          <CollapsedNavItem
+            Icon={DocumentIcon}
+            label="Disclosures"
+            onClick={() => dispatch({ type: "disc click collapsed" })}
+          />
+        </>
+      ) : (
+        <>
+          <NavItem Icon={BoxesIcon} label="Dashboard" path="/dashboard" />
+          <NavItem
+            Icon={PieChartIcon}
+            label="Data Management"
+            onClick={() => dispatch({ type: "dataMgmt click expanded" })}
+          />
+          {nav.dataMgmt
+            ? null
+            : dataMngmtNavObjs.map((obj) => (
+                <NavItem
+                  key={obj.id}
+                  Icon={obj.Icon}
+                  path={obj.path}
+                  label={obj.label}
+                />
+              ))}
+          <NavItem
+            Icon={SupplyChainIcon}
+            label="Supply Chain"
+            onClick={() => dispatch({ type: "supChain click expanded" })}
+          />
+          {nav.supChain
+            ? null
+            : supChainNavObjs.map((obj) => (
+                <NavItem
+                  key={obj.id}
+                  Icon={obj.Icon}
+                  path={obj.path}
+                  label={obj.label}
+                />
+              ))}
+          <NavItem
+            Icon={TVIcon}
+            label="Strategy"
+            onClick={() => dispatch({ type: "strat click expanded" })}
+          />
+          {nav.strat
+            ? null
+            : stratNavObjs.map((obj) => (
+                <NavItem
+                  key={obj.id}
+                  Icon={obj.Icon}
+                  path={obj.path}
+                  label={obj.label}
+                />
+              ))}
+          <NavItem
+            Icon={DocumentIcon}
+            label="Disclosures"
+            onClick={() => dispatch({ type: "disc click expanded" })}
+          />
+          {nav.disc
+            ? null
+            : disclosureNavObjs.map((obj) => (
+                <NavItem
+                  key={obj.id}
+                  Icon={obj.Icon}
+                  path={obj.path}
+                  label={obj.label}
+                />
+              ))}
+        </>
+      )}
+
+      {/* space at the bottom for beauty!! */}
+      <div className="h-[200px]" />
+    </div>
+  );
+}
+
+const SidebarHomeItem = ({ isCollapsed, showHideDock }) => {
+  const location = useLocation();
+  const isSelected = location.pathname === "/";
+
+  if (!isCollapsed)
+    return (
+      <>
+        {/* NavItem */}
+        <div className="group relative flex justify-between items-center h-[50px] px-[24px] cursor-pointer">
+          <div
+            className={"absolute w-full h-full top-0 left-0 z-0"}
+            style={{
+              visibility: isSelected ? "visible" : "hidden",
+              backgroundImage: "linear-gradient(to right, #DBDBF6 , #FFFFFF)",
+            }}
+          />
+          <div
+            className={clsx(
+              "h-full w-[4px] absolute top-0 left-0 z-0 bg-indigo-600",
+              { visible: isSelected },
+              { hidden: !isSelected }
+            )}
+          />
+
+          <div
+            className={clsx(
+              "flex items-center text-[14px] font-[600] font-manrope relative z-10 select-none",
+              { "group-hover:text-black text-gray-500": !isSelected },
+              { "text-black": isSelected }
+            )}
+          >
+            <IoHomeOutline className="text-[20px]" />
+
+            <div className="w-[8px]" />
+            {/* label */}
+            {"Home"}
+          </div>
+
+          <StyledIcon
+            onClick={() => showHideDock()}
+            Icon={HideDockIcon}
+            isChildSelect={false}
+            isSelected={isSelected}
+          />
+        </div>
+      </>
+    );
+  else {
+    return (
+      <div className="flex flex-col justify-start items-center">
+        <div
+          onClick={() => showHideDock()}
+          className="h-[40px] w-[40px] rounded-full flex justify-center items-center cursor-pointer bg-gray-100 group"
+        >
+          <ShowDockIcon className="group-hover:stroke-black stroke-gray-500" />
+        </div>
+        <div className="h-[20px]" />
+        <div className="flex justify-center items-center h-[50px] relative w-full cursor-pointer group">
+          <div
+            className={"absolute w-full h-full top-0 left-0 z-0"}
+            style={{
+              visibility: isSelected ? "visible" : "hidden",
+              backgroundImage: "linear-gradient(to right, #DBDBF6 , #FFFFFF)",
+            }}
+          />
+          <div
+            className={clsx(
+              "h-full w-[4px] absolute top-0 left-0 z-0 bg-indigo-600",
+              { visible: isSelected },
+              { hidden: !isSelected }
+            )}
+          />
+          <IoHomeOutline className="text-[20px] z-10 text-gray-500 group-hover:text-black" />
+        </div>
+      </div>
+    );
+  }
+};
+
+const SidebarHeader = ({ isCollapsed }) => {
+  return (
+    <div
+      className={clsx(
+        "flex items-center sticky top-0 z-20 bg-white",
+        {
+          "py-[24px] px-[30px] flex-col justify-start": isCollapsed,
+        },
+        {
+          "pt-[24px] px-[24px] pb-[44px] flex-row justify-between":
+            !isCollapsed,
+        }
+      )}
+    >
+      <WiproLogo />
+
+      {isCollapsed ? <div className="h-[28px]" /> : null}
+
+      <div
+        className={clsx(
+          "flex items-center",
+          { "flex-col": isCollapsed },
+          { "flex-row": !isCollapsed }
+        )}
+      >
+        <div className="flex justify-center items-center w-[36px] h-[36px] rounded-full relative bg-amber-200">
+          <BellIcon className="fill-amber-500" />
+
+          <div className="flex justify-center items-center w-[16px] h-[16px] rounded-full absolute -top-[6px] -right-[10px] border-[3px] border-white text-white text-[9px] font-bold bg-amber-500 box-content">
+            21
+          </div>
+        </div>
+
+        {isCollapsed ? (
+          <div className="h-[20px]" />
+        ) : (
+          <div className="w-[16px]" />
+        )}
+
+        <Avatar />
+      </div>
+    </div>
+  );
+};
+
+const NavItem = ({ Icon, label, path, ...props }) => {
+  const location = useLocation();
+  const isSelected = path === location.pathname;
+
+  let isChildSelect = false;
+  if (location.pathname.split("/").length === 3) {
+    if (
+      location.pathname.split("/")[1] ===
+      label.toLowerCase().replaceAll(" ", "-")
+    )
+      isChildSelect = true;
+  }
+
+  return (
+    <>
+      {/* gray seperator line */}
+      <div className="h-[2px] w-full bg-gray-100" />
+
+      {/* NewNavItem */}
+      <div
+        className="group relative flex justify-between items-center h-[50px] px-[24px] cursor-pointer"
+        {...props}
+      >
+        <div
+          className={"absolute w-full h-full top-0 left-0 z-0"}
+          style={{
+            visibility: isSelected ? "visible" : "hidden",
+            backgroundImage: "linear-gradient(to right, #DBDBF6 , #FFFFFF)",
+          }}
+        />
+        <div
+          className={clsx(
+            "h-full w-[4px] absolute top-0 left-0 z-0 bg-indigo-600",
+            { visible: isSelected },
+            { hidden: !isSelected }
+          )}
+        />
+
+        <div
+          className={clsx(
+            "flex items-center text-[14px] font-[600] font-manrope relative z-10 select-none",
+            { "text-indigo-600": isChildSelect },
+            {
+              "group-hover:text-black text-gray-500":
+                !isSelected && !isChildSelect,
+            },
+            { "text-black": isSelected && !isChildSelect }
+          )}
+        >
+          {/* blank space if it is a child element */}
+          {path && path.split("/").length > 2 ? (
+            <div className="w-[24px]" />
+          ) : null}
+
+          {/* Icon */}
+          <StyledIcon
+            Icon={Icon}
+            isChildSelect={isChildSelect}
+            isSelected={isSelected}
+          />
+
+          <div className="w-[8px]" />
+          {/* label */}
+          {label}
+        </div>
+
+        {/* arrow icon */}
+        {path ? (
+          <ArrowIcon
+            className={clsx(
+              "relative z-10",
+              { "stroke-indigo-600": isChildSelect },
+              {
+                "group-hover:stroke-black stroke-gray-500":
+                  !isSelected && !isChildSelect,
+              },
+              { "stroke-black": isSelected && !isChildSelect }
+            )}
+          />
+        ) : null}
+      </div>
+    </>
+  );
+};
+
+const CollapsedNavItem = ({ Icon, label, path, ...props }) => {
+  const location = useLocation();
+  const isSelected = path === location.pathname;
+
+  let isChildSelect = false;
+  if (location.pathname.split("/").length === 3) {
+    if (
+      location.pathname.split("/")[1] ===
+      label.toLowerCase().replaceAll(" ", "-")
+    )
+      isChildSelect = true;
+  }
+
+  return (
+    <div
+      className="flex justify-center items-center h-[50px] relative w-full cursor-pointer group"
+      {...props}
+    >
+      <div
+        className={"absolute w-full h-full top-0 left-0 z-0"}
+        style={{
+          visibility: isSelected || isChildSelect ? "visible" : "hidden",
+          backgroundImage: "linear-gradient(to right, #DBDBF6 , #FFFFFF)",
+        }}
+      />
+      <div
+        className={clsx(
+          "h-full w-[4px] absolute top-0 left-0 z-0 bg-indigo-600",
+          { visible: isSelected || isChildSelect },
+          { hidden: !isSelected && !isChildSelect }
+        )}
+      />
+
+      <div className="relative z-10">
+        <StyledIcon
+          Icon={Icon}
+          isSelected={isSelected || isChildSelect}
+          isChildSelect={false}
+        />
+      </div>
+    </div>
+  );
+};
+
+const StyledIcon = ({ Icon, isChildSelect, isSelected, ...props }) => {
+  if (
+    [
+      ArrowIcon,
+      BoxesIcon,
+      ElectricityIcon,
+      HideDockIcon,
+      PieChartIcon,
+      SearchIcon,
+      ShowDockIcon,
+      TVIcon,
+      WaterIcon,
+    ].includes(Icon)
+  )
+    return (
+      <Icon
+        className={clsx(
+          { "stroke-indigo-600": isChildSelect },
+          {
+            "group-hover:stroke-black stroke-gray-500":
+              !isSelected && !isChildSelect,
+          },
+          { "stroke-black": isSelected && !isChildSelect }
+        )}
+        {...props}
+      />
+    );
+  else
+    return (
+      <Icon
+        className={clsx(
+          { "fill-indigo-600": isChildSelect },
+          {
+            "group-hover:fill-black fill-gray-500":
+              !isSelected && !isChildSelect,
+          },
+          { "fill-black": isSelected && !isChildSelect }
+        )}
+      />
+    );
+};
