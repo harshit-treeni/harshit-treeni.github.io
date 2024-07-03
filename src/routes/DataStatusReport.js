@@ -159,6 +159,7 @@ export default function DataStatusReport() {
   );
 
   window.onmessage = (e) => {
+    console.log(e);
     if (e.data.type === "data") {
       if (compareTwoArraysOfObj(e.data.data.locations, locations))
         dispatch({
