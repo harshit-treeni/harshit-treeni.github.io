@@ -16,7 +16,7 @@ import PeopleIcon from "../icons/PeopleIcon";
 import SupplyChainIcon from "../icons/SupplyChainIcon";
 import SearchIcon from "../icons/SearchIcon";
 
-import { useReducer } from "react";
+import { useReducer, useRef } from "react";
 
 import { ReactComponent as Avatar } from "./../avatar.svg";
 import { ReactComponent as WiproLogo } from "./../logos/wipro_logo.svg";
@@ -24,42 +24,44 @@ import { IoHomeOutline } from "react-icons/io5";
 import { useLocation } from "react-router-dom";
 
 const dataMngmtNavObjs = [
-  {
-    id: 1,
-    Icon: EditIcon,
-    label: "Data Analytics",
-    path: "/data-management/data-analytics",
-  },
+  // {
+  //   id: 1,
+  //   Icon: EditIcon,
+  //   label: "Data Analytics",
+  //   path: "/data-management/data-analytics",
+  // },
   {
     id: 2,
     Icon: BarGraphIcon,
     label: "Data Entry",
     path: "/data-management/data-entry",
+    href: "/indicator_data#/",
   },
   {
     id: 3,
     Icon: BoxesIcon,
     label: "To-Do-List",
     path: "/data-management/to-do-list",
+    href: "/indicator_data#/web_notification_actions?tab=to_do_lists&page=1&limit=10",
   },
-  {
-    id: 4,
-    Icon: PeopleIcon,
-    label: "SDG's",
-    path: "/data-management/sdgs",
-  },
+  // {
+  //   id: 4,
+  //   Icon: PeopleIcon,
+  //   label: "SDG's",
+  //   path: "/data-management/sdgs",
+  // },
   {
     id: 5,
     Icon: ElectricityIcon,
     label: "Data Status Report",
     path: "/data-management/data-status-report",
   },
-  {
-    id: 6,
-    Icon: WaterIcon,
-    label: "Data Review",
-    path: "/data-management/data-review",
-  },
+  // {
+  //   id: 6,
+  //   Icon: WaterIcon,
+  //   label: "Data Review",
+  //   path: "/data-management/data-review",
+  // },
 ];
 
 const supChainNavObjs = [
@@ -83,19 +85,20 @@ const stratNavObjs = [
     Icon: EditIcon,
     label: "Goals",
     path: "/strategy/goals",
+    href: "/goals/#/",
   },
-  {
-    id: 2,
-    Icon: BarGraphIcon,
-    label: "Risk Universe",
-    path: "/strategy/risk-universe",
-  },
-  {
-    id: 3,
-    Icon: BarGraphIcon,
-    label: "Risk Inventory",
-    path: "/strategy/risk-inventory",
-  },
+  // {
+  //   id: 2,
+  //   Icon: BarGraphIcon,
+  //   label: "Risk Universe",
+  //   path: "/strategy/risk-universe",
+  // },
+  // {
+  //   id: 3,
+  //   Icon: BarGraphIcon,
+  //   label: "Risk Inventory",
+  //   path: "/strategy/risk-inventory",
+  // },
 ];
 
 const disclosureNavObjs = [
@@ -104,12 +107,14 @@ const disclosureNavObjs = [
     Icon: EditIcon,
     label: "Publishers",
     path: "/disclosures/publishers",
+    href: "/disclosures#/",
   },
   {
     id: 2,
     Icon: BarGraphIcon,
     label: "Templates",
     path: "/disclosures/templates",
+    href: "/templates#/",
   },
 ];
 
@@ -255,17 +260,18 @@ export default function Sidebar() {
             Icon={BoxesIcon}
             label="Dashboard"
             path="/dashboard"
+            href={"/#/"}
           />
           <CollapsedNavItem
             Icon={PieChartIcon}
             label="Data Management"
             onClick={() => dispatch({ type: "dataMgmt click collapsed" })}
           />
-          <CollapsedNavItem
+          {/* <CollapsedNavItem
             Icon={SupplyChainIcon}
             label="Supply Chain"
             onClick={() => dispatch({ type: "supChain click collapsed" })}
-          />
+          /> */}
           <CollapsedNavItem
             Icon={TVIcon}
             label="Strategy"
@@ -279,7 +285,12 @@ export default function Sidebar() {
         </>
       ) : (
         <>
-          <NavItem Icon={BoxesIcon} label="Dashboard" path="/dashboard" />
+          <NavItem
+            Icon={BoxesIcon}
+            label="Dashboard"
+            path="/dashboard"
+            href={"/#/"}
+          />
           <NavItem
             Icon={PieChartIcon}
             label="Data Management"
@@ -293,9 +304,10 @@ export default function Sidebar() {
                   Icon={obj.Icon}
                   path={obj.path}
                   label={obj.label}
+                  href={obj.href}
                 />
               ))}
-          <NavItem
+          {/* <NavItem
             Icon={SupplyChainIcon}
             label="Supply Chain"
             onClick={() => dispatch({ type: "supChain click expanded" })}
@@ -309,7 +321,7 @@ export default function Sidebar() {
                   path={obj.path}
                   label={obj.label}
                 />
-              ))}
+              ))} */}
           <NavItem
             Icon={TVIcon}
             label="Strategy"
@@ -323,6 +335,7 @@ export default function Sidebar() {
                   Icon={obj.Icon}
                   path={obj.path}
                   label={obj.label}
+                  href={obj.href}
                 />
               ))}
           <NavItem
@@ -338,6 +351,7 @@ export default function Sidebar() {
                   Icon={obj.Icon}
                   path={obj.path}
                   label={obj.label}
+                  href={obj.href}
                 />
               ))}
         </>
@@ -353,40 +367,50 @@ const SidebarHomeItem = ({ isCollapsed, showHideDock }) => {
   const location = useLocation();
   const isSelected = location.pathname === "/";
 
+  const hideDockIconRef = useRef(null);
+
   if (!isCollapsed)
     return (
-      <>
-        {/* NavItem */}
-        <div className="group relative flex justify-between items-center h-[50px] px-[24px] cursor-pointer">
-          <div
-            className={"absolute w-full h-full top-0 left-0 z-0"}
-            style={{
-              visibility: isSelected ? "visible" : "hidden",
-              backgroundImage: "linear-gradient(to right, #DBDBF6 , #FFFFFF)",
-            }}
-          />
-          <div
-            className={clsx(
-              "h-full w-[4px] absolute top-0 left-0 z-0 bg-indigo-600",
-              { visible: isSelected },
-              { hidden: !isSelected }
-            )}
-          />
+      <div
+        onClick={(evt) => {
+          if (!hideDockIconRef.current.contains(evt.target))
+            window.parent.postMessage(
+              { type: "navigate", href: "/#/landing_page" },
+              "*"
+            );
+        }}
+        className="group relative flex justify-between items-center h-[50px] px-[24px] cursor-pointer"
+      >
+        <div
+          className={"absolute w-full h-full top-0 left-0 z-0"}
+          style={{
+            visibility: isSelected ? "visible" : "hidden",
+            backgroundImage: "linear-gradient(to right, #DBDBF6 , #FFFFFF)",
+          }}
+        />
+        <div
+          className={clsx(
+            "h-full w-[4px] absolute top-0 left-0 z-0 bg-indigo-600",
+            { visible: isSelected },
+            { hidden: !isSelected }
+          )}
+        />
 
-          <div
-            className={clsx(
-              "flex items-center text-[14px] font-[600] font-manrope relative z-10 select-none",
-              { "group-hover:text-black text-gray-500": !isSelected },
-              { "text-black": isSelected }
-            )}
-          >
-            <IoHomeOutline className="text-[20px]" />
+        <div
+          className={clsx(
+            "flex items-center text-[14px] font-[600] font-manrope relative z-10 select-none",
+            { "group-hover:text-black text-gray-500": !isSelected },
+            { "text-black": isSelected }
+          )}
+        >
+          <IoHomeOutline className="text-[20px]" />
 
-            <div className="w-[8px]" />
-            {/* label */}
-            {"Home"}
-          </div>
+          <div className="w-[8px]" />
+          {/* label */}
+          {"Home"}
+        </div>
 
+        <div ref={hideDockIconRef}>
           <StyledIcon
             onClick={() => showHideDock()}
             Icon={HideDockIcon}
@@ -394,7 +418,7 @@ const SidebarHomeItem = ({ isCollapsed, showHideDock }) => {
             isSelected={isSelected}
           />
         </div>
-      </>
+      </div>
     );
   else {
     return (
@@ -406,7 +430,15 @@ const SidebarHomeItem = ({ isCollapsed, showHideDock }) => {
           <ShowDockIcon className="group-hover:stroke-black stroke-gray-500" />
         </div>
         <div className="h-[20px]" />
-        <div className="flex justify-center items-center h-[50px] relative w-full cursor-pointer group">
+        <div
+          onClick={() => {
+            window.parent.postMessage(
+              { type: "navigate", href: "/#/landing_page" },
+              "*"
+            );
+          }}
+          className="cursor-pointer flex justify-center items-center h-[50px] relative w-full cursor-pointer group"
+        >
           <div
             className={"absolute w-full h-full top-0 left-0 z-0"}
             style={{
@@ -442,7 +474,15 @@ const SidebarHeader = ({ isCollapsed }) => {
         }
       )}
     >
-      <WiproLogo />
+      <WiproLogo
+        className="cursor-pointer"
+        onClick={() => {
+          window.parent.postMessage(
+            { type: "navigate", href: "/#/landing_page" },
+            "*"
+          );
+        }}
+      />
 
       {isCollapsed ? <div className="h-[28px]" /> : null}
 
@@ -473,7 +513,7 @@ const SidebarHeader = ({ isCollapsed }) => {
   );
 };
 
-const NavItem = ({ Icon, label, path, ...props }) => {
+const NavItem = ({ Icon, label, path, href, ...props }) => {
   const location = useLocation();
   const isSelected = path === location.pathname;
 
@@ -486,6 +526,8 @@ const NavItem = ({ Icon, label, path, ...props }) => {
       isChildSelect = true;
   }
 
+  const { onClick: providedOnClick, ...otherProps } = props;
+
   return (
     <>
       {/* gray seperator line */}
@@ -494,7 +536,13 @@ const NavItem = ({ Icon, label, path, ...props }) => {
       {/* NewNavItem */}
       <div
         className="group relative flex justify-between items-center h-[50px] px-[24px] cursor-pointer"
-        {...props}
+        onClick={() => {
+          if (!providedOnClick) {
+            if (href)
+              window.parent.postMessage({ type: "navigate", href }, "*");
+          } else providedOnClick();
+        }}
+        {...otherProps}
       >
         <div
           className={"absolute w-full h-full top-0 left-0 z-0"}
@@ -558,7 +606,7 @@ const NavItem = ({ Icon, label, path, ...props }) => {
   );
 };
 
-const CollapsedNavItem = ({ Icon, label, path, ...props }) => {
+const CollapsedNavItem = ({ Icon, label, path, href, ...props }) => {
   const location = useLocation();
   const isSelected = path === location.pathname;
 
@@ -571,10 +619,17 @@ const CollapsedNavItem = ({ Icon, label, path, ...props }) => {
       isChildSelect = true;
   }
 
+  const { onClick: providedOnClick, ...otherProps } = props;
+
   return (
     <div
       className="flex justify-center items-center h-[50px] relative w-full cursor-pointer group"
-      {...props}
+      onClick={() => {
+        if (!providedOnClick) {
+          if (href) window.parent.postMessage({ type: "navigate", href }, "*");
+        } else providedOnClick();
+      }}
+      {...otherProps}
     >
       <div
         className={"absolute w-full h-full top-0 left-0 z-0"}

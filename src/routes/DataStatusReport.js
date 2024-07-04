@@ -159,7 +159,6 @@ export default function DataStatusReport() {
   );
 
   window.onmessage = (e) => {
-    console.log(e);
     if (e.data.type === "data") {
       if (compareTwoArraysOfObj(e.data.data.locations, locations))
         dispatch({
@@ -265,9 +264,10 @@ export default function DataStatusReport() {
           <MyComboBox
             placeholder={"Location"}
             value={location}
-            onChange={(val) =>
-              dispatch({ type: "location change", location: val })
-            }
+            onChange={(val) => {
+              if (val !== location)
+                dispatch({ type: "location change", location: val });
+            }}
             options={locations}
           />
         )}
@@ -279,9 +279,10 @@ export default function DataStatusReport() {
           <MyComboBox
             placeholder={"Category"}
             value={category}
-            onChange={(val) =>
-              dispatch({ type: "category change", category: val })
-            }
+            onChange={(val) => {
+              if (val !== location)
+                dispatch({ type: "category change", category: val });
+            }}
             options={categories}
           />
         )}
@@ -293,9 +294,10 @@ export default function DataStatusReport() {
           <MyComboBox
             placeholder={"Indicator"}
             value={indicator}
-            onChange={(val) =>
-              dispatch({ type: "indicator change", indicator: val })
-            }
+            onChange={(val) => {
+              if (val !== location)
+                dispatch({ type: "indicator change", indicator: val });
+            }}
             options={indicators}
           />
         )}
