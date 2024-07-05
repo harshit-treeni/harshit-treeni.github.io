@@ -15,6 +15,7 @@ import EditIcon from "../icons/EditIcon";
 import PeopleIcon from "../icons/PeopleIcon";
 import SupplyChainIcon from "../icons/SupplyChainIcon";
 import SearchIcon from "../icons/SearchIcon";
+import { GoPeople } from "react-icons/go";
 
 import { useReducer, useRef } from "react";
 
@@ -507,7 +508,9 @@ const SidebarHeader = ({ isCollapsed }) => {
           <div className="w-[16px]" />
         )}
 
-        <Avatar />
+        <div className="bg-gray-100 w-[36px] h-[36px] rounded-full flex justify-center items-center">
+          <GoPeople />
+        </div>
       </div>
     </div>
   );
