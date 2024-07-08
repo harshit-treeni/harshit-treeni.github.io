@@ -8,7 +8,7 @@ import RecordsBlock from "../components/RecordsBlock";
 import PageSelect from "../components/PageSelect";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import MyComboBox from "../components/MyComboBox";
-import { useReducer } from "react";
+import { useCallback, useEffect, useReducer } from "react";
 import clsx from "clsx";
 
 import RecordsLoader from "../components/RecordsLoader";
@@ -158,61 +158,72 @@ export default function DataStatusReport() {
     "*"
   );
 
-  window.onmessage = (e) => {
-    if (e.data.type === "data") {
-      if (compareTwoArraysOfObj(e.data.data.locations, locations))
-        dispatch({
-          type: "locations change",
-          locations: e.data.data.locations,
-        });
-
-      if (
-        compareTwoArraysOfObj(
-          e.data.data.categories.orgNode_category_details,
-          categories
-        )
-      )
-        dispatch({
-          type: "categories change",
-          categories: e.data.data.categories.orgNode_category_details,
-        });
-
-      if (
-        compareTwoArraysOfObj(
-          e.data.data.indicators.data_point_details,
-          indicators
-        )
-      )
-        dispatch({
-          type: "indicators change",
-          indicators: e.data.data.indicators.data_point_details,
-        });
-
-      if (
-        compareDashboardData(
-          getDashboardDataObj(e.data.data.dashboardData),
-          dashboardData
-        )
-      ) {
-        dispatch({
-          type: "dashboardData change",
-          dashboardData: getDashboardDataObj(e.data.data.dashboardData),
-        });
-      }
-
-      if (e.data.data.recordsObj) {
-        if (recordsObj === null || e.data.data.recordsObj.id !== recordsObj.id)
+  const onMessageListener = useCallback(
+    (e) => {
+      if (e.data.type === "data") {
+        if (compareTwoArraysOfObj(e.data.data.locations, locations))
           dispatch({
-            type: "recordsObj change",
-            recordsObj: {
-              ...e.data.data.recordsObj,
-              records: e.data.data.recordsObj.records.map(mapRecord),
-              selectAll: false,
-            },
+            type: "locations change",
+            locations: e.data.data.locations,
           });
+
+        if (
+          compareTwoArraysOfObj(
+            e.data.data.categories.orgNode_category_details,
+            categories
+          )
+        )
+          dispatch({
+            type: "categories change",
+            categories: e.data.data.categories.orgNode_category_details,
+          });
+
+        if (
+          compareTwoArraysOfObj(
+            e.data.data.indicators.data_point_details,
+            indicators
+          )
+        )
+          dispatch({
+            type: "indicators change",
+            indicators: e.data.data.indicators.data_point_details,
+          });
+
+        if (
+          compareDashboardData(
+            getDashboardDataObj(e.data.data.dashboardData),
+            dashboardData
+          )
+        ) {
+          dispatch({
+            type: "dashboardData change",
+            dashboardData: getDashboardDataObj(e.data.data.dashboardData),
+          });
+        }
+
+        if (e.data.data.recordsObj) {
+          if (
+            recordsObj === null ||
+            e.data.data.recordsObj.id !== recordsObj.id
+          )
+            dispatch({
+              type: "recordsObj change",
+              recordsObj: {
+                ...e.data.data.recordsObj,
+                records: e.data.data.recordsObj.records.map(mapRecord),
+                selectAll: false,
+              },
+            });
+        }
       }
-    }
-  };
+    },
+    [locations, categories, indicators, dashboardData, recordsObj]
+  );
+
+  useEffect(() => {
+    window.addEventListener("message", onMessageListener);
+    return () => window.removeEventListener("message", onMessageListener);
+  }, [onMessageListener]);
 
   return (
     <div className="p-[48px] flex flex-col justify-start items-start ">
