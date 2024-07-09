@@ -23,6 +23,7 @@ import { ReactComponent as Avatar } from "./../avatar.svg";
 import { ReactComponent as WiproLogo } from "./../logos/wipro_logo.svg";
 import { IoHomeOutline } from "react-icons/io5";
 import { useLocation } from "react-router-dom";
+import { GrayPalette } from "../colors";
 
 const dataMngmtNavObjs = [
   // {
@@ -386,12 +387,12 @@ const SidebarHomeItem = ({ isCollapsed, showHideDock }) => {
           className={"absolute w-full h-full top-0 left-0 z-0"}
           style={{
             visibility: isSelected ? "visible" : "hidden",
-            backgroundImage: "linear-gradient(to right, #DBDBF6 , #FFFFFF)",
+            backgroundImage: `linear-gradient(to right, ${GrayPalette.LIGHTEST} , #FFFFFF)`,
           }}
         />
         <div
           className={clsx(
-            "h-full w-[4px] absolute top-0 left-0 z-0 bg-indigo-600",
+            "h-full w-[4px] absolute top-0 left-0 z-0 bg-gray-palette-lightest",
             { visible: isSelected },
             { hidden: !isSelected }
           )}
@@ -449,7 +450,7 @@ const SidebarHomeItem = ({ isCollapsed, showHideDock }) => {
           />
           <div
             className={clsx(
-              "h-full w-[4px] absolute top-0 left-0 z-0 bg-indigo-600",
+              "h-full w-[4px] absolute top-0 left-0 z-0 bg-gray-palette-lightest",
               { visible: isSelected },
               { hidden: !isSelected }
             )}
@@ -494,7 +495,7 @@ const SidebarHeader = ({ isCollapsed }) => {
           { "flex-row": !isCollapsed }
         )}
       >
-        <div className="flex justify-center items-center w-[36px] h-[36px] rounded-full relative bg-amber-200">
+        {/* <div className="flex justify-center items-center w-[36px] h-[36px] rounded-full relative bg-amber-200">
           <BellIcon className="fill-amber-500" />
 
           <div className="flex justify-center items-center w-[16px] h-[16px] rounded-full absolute -top-[6px] -right-[10px] border-[3px] border-white text-white text-[9px] font-bold bg-amber-500 box-content">
@@ -506,7 +507,7 @@ const SidebarHeader = ({ isCollapsed }) => {
           <div className="h-[20px]" />
         ) : (
           <div className="w-[16px]" />
-        )}
+        )} */}
 
         <div className="bg-gray-100 w-[36px] h-[36px] rounded-full flex justify-center items-center">
           <GoPeople />
@@ -556,7 +557,7 @@ const NavItem = ({ Icon, label, path, href, ...props }) => {
         />
         <div
           className={clsx(
-            "h-full w-[4px] absolute top-0 left-0 z-0 bg-indigo-600",
+            "h-full w-[4px] absolute top-0 left-0 z-0 bg-gray-palette-lightest",
             { visible: isSelected },
             { hidden: !isSelected }
           )}
@@ -565,7 +566,7 @@ const NavItem = ({ Icon, label, path, href, ...props }) => {
         <div
           className={clsx(
             "flex items-center text-[14px] font-[600] font-manrope relative z-10 select-none",
-            { "text-indigo-600": isChildSelect },
+            { "text-gray-palette-dark": isChildSelect },
             {
               "group-hover:text-black text-gray-500":
                 !isSelected && !isChildSelect,
@@ -595,7 +596,7 @@ const NavItem = ({ Icon, label, path, href, ...props }) => {
           <ArrowIcon
             className={clsx(
               "relative z-10",
-              { "stroke-indigo-600": isChildSelect },
+              { "stroke-gray-palette-dark": isChildSelect },
               {
                 "group-hover:stroke-black stroke-gray-500":
                   !isSelected && !isChildSelect,
@@ -643,7 +644,7 @@ const CollapsedNavItem = ({ Icon, label, path, href, ...props }) => {
       />
       <div
         className={clsx(
-          "h-full w-[4px] absolute top-0 left-0 z-0 bg-indigo-600",
+          "h-full w-[4px] absolute top-0 left-0 z-0 bg-gray-palette-lightest",
           { visible: isSelected || isChildSelect },
           { hidden: !isSelected && !isChildSelect }
         )}
@@ -677,7 +678,7 @@ const StyledIcon = ({ Icon, isChildSelect, isSelected, ...props }) => {
     return (
       <Icon
         className={clsx(
-          { "stroke-indigo-600": isChildSelect },
+          { "stroke-gray-palette-dark": isChildSelect },
           {
             "group-hover:stroke-black stroke-gray-500":
               !isSelected && !isChildSelect,
@@ -691,7 +692,7 @@ const StyledIcon = ({ Icon, isChildSelect, isSelected, ...props }) => {
     return (
       <Icon
         className={clsx(
-          { "fill-indigo-600": isChildSelect },
+          { "fill-gray-palette-dark": isChildSelect },
           {
             "group-hover:fill-black fill-gray-500":
               !isSelected && !isChildSelect,

@@ -184,17 +184,9 @@ export default function Dashboard({ licenseKey }) {
       <div className="flex justify-between items-center">
         <div className="text-[26px] font-[600]">Peer Benchmarking</div>
         <div className="flex items-center">
-          <GoShareAndroid
-            style={{ color: CustomGrayDark }}
-            className=" text-[18px] relative -top-[1px]"
-          />
+          <GoShareAndroid className="text-gray-500 text-[18px] relative -top-[1px]" />
           <div className="w-[4px]" />
-          <div
-            style={{ color: CustomGrayDark }}
-            className="text-[14px] font-[500] "
-          >
-            Share
-          </div>
+          <div className="text-gray-500 text-[14px] font-[500] ">Share</div>
           <div className="w-[20px]" />
           <div>
             <DetailsIcon color={CustomGrayDark} />

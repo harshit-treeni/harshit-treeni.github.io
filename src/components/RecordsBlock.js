@@ -4,7 +4,7 @@ import {
   GridCellKind,
 } from "@glideapps/glide-data-grid";
 import { useCallback, useMemo } from "react";
-import { CustomGrayDark } from "../colors";
+import { CustomGrayDark, GrayPalette } from "../colors";
 
 const indexes = [
   "select",
@@ -20,7 +20,7 @@ const indexes = [
 
 const theme = {
   bgCell: "#F3F2FF",
-  bgHeader: "#9D9BFF",
+  bgHeader: GrayPalette.LIGHTEST,
   borderColor: "transparent",
   cellHorizontalPadding: 36,
   headerFontStyle: "600 18px",

@@ -1,5 +1,5 @@
 import { FaArrowLeft } from "react-icons/fa6";
-import { CustomBlue, CustomGrayDark } from "../colors";
+import { CustomGrayDark } from "../colors";
 
 import DetailsIcon from "../icons/DetailsIcon";
 
@@ -7,12 +7,16 @@ import ColumnGraphBlock from "../components/ColumnGraphBlock";
 import RecordsBlock from "../components/RecordsBlock";
 import PageSelect from "../components/PageSelect";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
+import { BiExport } from "react-icons/bi";
 import MyComboBox from "../components/MyComboBox";
-import { useCallback, useEffect, useReducer } from "react";
+import { useCallback, useEffect, useReducer, useState } from "react";
 import clsx from "clsx";
 
 import RecordsLoader from "../components/RecordsLoader";
 import ComboBoxLoader from "../components/ComboBoxLoader";
+import { Arrow, useLayer } from "react-laag";
+import { AnimatePresence } from "framer-motion";
+import FYSelect from "../components/FYSelect";
 
 function DSRReducer(state, action) {
   // eslint-disable-next-line default-case
@@ -150,13 +154,15 @@ export default function DataStatusReport() {
     loadingState,
   } = state;
 
-  window.parent.postMessage(
-    {
-      type: "sync",
-      data: { location, category, indicator, pageOption },
-    },
-    "*"
-  );
+  useEffect(() => {
+    window.parent.postMessage(
+      {
+        type: "sync",
+        data: { location, category, indicator, pageOption },
+      },
+      "*"
+    );
+  }, [location, category, indicator, pageOption]);
 
   const onMessageListener = useCallback(
     (e) => {
@@ -225,18 +231,31 @@ export default function DataStatusReport() {
     return () => window.removeEventListener("message", onMessageListener);
   }, [onMessageListener]);
 
+  const [isOpen, setOpen] = useState(false);
+
+  // helper function to close the menu
+  function close() {
+    setOpen(false);
+  }
+
+  const { renderLayer, triggerProps, layerProps, arrowProps } = useLayer({
+    isOpen,
+    onOutsideClick: close, // close the menu when the user clicks outside
+    onDisappear: close, // close the menu when the menu gets scrolled out of sight
+    overflowContainer: false, // keep the menu positioned inside the container
+    auto: true, // automatically find the best placement
+    placement: "bottom-end", // we prefer to place the menu "top-end"
+    triggerOffset: 12, // keep some distance to the trigger
+    containerOffset: 16, // give the menu some room to breath relative to the container
+    arrowOffset: 16, // let the arrow have some room to breath also
+  });
+
   return (
     <div className="p-[48px] flex flex-col justify-start items-start ">
       <div className="w-full flex items-center">
         <div className="rounded-full p-[8px] bg-[white] flex items-center cursor-pointer">
-          <div
-            style={{ background: "rgba(74, 71, 235, 0.11)" }}
-            className="rounded-full w-[24px] h-[24px] flex justify-center items-center"
-          >
-            <FaArrowLeft
-              style={{ color: CustomBlue }}
-              className="text-[14px]"
-            />
+          <div className="bg-gray-palette-lightest/[0.1] rounded-full w-[24px] h-[24px] flex justify-center items-center">
+            <FaArrowLeft className="text-gray-palette-lightest text-[14px]" />
           </div>
           <div className="w-[8px]" />
           <div
@@ -256,9 +275,26 @@ export default function DataStatusReport() {
           {"Data Management / Data Status Report"}
         </div>
 
-        <div className="cursor-pointer rounded-full">
+        <div
+          {...triggerProps}
+          onClick={() => setOpen(!isOpen)}
+          className="cursor-pointer rounded-full"
+        >
           <DetailsIcon color={CustomGrayDark} />
         </div>
+        {renderLayer(
+          <AnimatePresence>
+            {isOpen && (
+              <div className="bg-white rounded-lg p-[4px]" {...layerProps}>
+                <div className="text-gray-500 cursor-pointer hover:bg-gray-50 rounded-md py-[8px] px-[12px] flex items-center">
+                  <BiExport className="text-gray-500 text-[28px] pr-[8px]" />
+                  Export
+                </div>
+                <Arrow color="white" {...arrowProps} />
+              </div>
+            )}
+          </AnimatePresence>
+        )}
       </div>
 
       <div className="h-[28px]" />
@@ -276,7 +312,7 @@ export default function DataStatusReport() {
             placeholder={"Location"}
             value={location}
             onChange={(val) => {
-              if (val !== location)
+              if (compareDatum(val, location))
                 dispatch({ type: "location change", location: val });
             }}
             options={locations}
@@ -291,7 +327,7 @@ export default function DataStatusReport() {
             placeholder={"Category"}
             value={category}
             onChange={(val) => {
-              if (val !== location)
+              if (compareDatum(val, category))
                 dispatch({ type: "category change", category: val });
             }}
             options={categories}
@@ -306,7 +342,7 @@ export default function DataStatusReport() {
             placeholder={"Indicator"}
             value={indicator}
             onChange={(val) => {
-              if (val !== location)
+              if (compareDatum(val, indicator))
                 dispatch({ type: "indicator change", indicator: val });
             }}
             options={indicators}
@@ -326,42 +362,52 @@ export default function DataStatusReport() {
       <ColumnGraphBlock data={dashboardData} dispatch={dispatch} />
 
       <div className="h-[28px]" />
-      <div
-        onClick={() => {
-          if (recordsObj) {
-            if (
-              recordsObj.records.filter((record) => record.select).length === 0
-            )
-              window.alert("Please choose atleast 1 record.");
-            else if (
-              window.confirm(
-                `Are you sure you want to notify the admin about the chosen records?`
+      <div className="flex justify-between items-end w-full">
+        <div
+          onClick={() => {
+            if (recordsObj) {
+              if (
+                recordsObj.records.filter((record) => record.select).length ===
+                0
               )
-            ) {
-              window.parent.postMessage(
-                {
-                  type: "notify admin",
-                  data: recordsObj
-                    ? recordsObj.records
-                        .filter((record) => record.select)
-                        .map((record) => record.id)
-                    : null,
-                },
-                "*"
-              );
+                window.alert("Please choose atleast 1 record.");
+              else if (
+                window.confirm(
+                  `Are you sure you want to notify the admin about the chosen records?`
+                )
+              ) {
+                window.parent.postMessage(
+                  {
+                    type: "notify admin",
+                    data: recordsObj
+                      ? recordsObj.records
+                          .filter((record) => record.select)
+                          .map((record) => record.id)
+                      : null,
+                  },
+                  "*"
+                );
+              }
             }
-          }
-        }}
-        className="rounded-full font-manrope text-[16px] font-[600] leading-[16px] py-[16px] px-[20px] text-white cursor-pointer"
-        style={{ background: CustomBlue }}
-      >
-        Notify Admin{" "}
-        {recordsObj
-          ? recordsObj.records.reduce(
-              (accumalator, record) => accumalator + (record.select ? 1 : 0),
-              0
-            )
-          : null}
+          }}
+          className="bg-gray-palette-lightest rounded-full font-manrope text-[16px] font-[600] leading-[16px] py-[16px] px-[20px] text-white cursor-pointer"
+        >
+          Notify User{" "}
+          {recordsObj
+            ? recordsObj.records.reduce(
+                (accumalator, record) => accumalator + (record.select ? 1 : 0),
+                0
+              )
+            : null}
+        </div>
+
+        <div className="flex items-center">
+          <div className="font-manrope font-[600] text-[16px] leading-[20px]">
+            {"Select Financial Year"}
+          </div>
+          <div className="w-[16px]" />
+          <FYSelect value={{ id: 1, option: 2025 }} />
+        </div>
       </div>
       <div className="h-[42px]" />
       <div className="w-full rounded-[14px] overflow-hidden relative">
@@ -375,10 +421,7 @@ export default function DataStatusReport() {
       </div>
       <div className="h-[28px]" />
       <div className="flex items-center justify-between w-full">
-        <div
-          className="text-[14px] font-manrope flex items-center"
-          style={{ color: CustomGrayDark }}
-        >
+        <div className="text-gray-500 text-[14px] font-manrope flex items-center">
           <div className="font-[700] text-black">
             {recordsObj
               ? `${
@@ -491,7 +534,8 @@ function PaginationBlock({ recordsObj, dispatch }) {
                   onClick={() => handlePageClick(pg)}
                   className={clsx({
                     "cursor-pointer rounded-md border border-black/5 px-[16px] py-[10px] font-manrope font-[600] text-[12px]": true,
-                    "bg-blue-700 text-white": recordsObj.page === pg,
+                    "bg-gray-palette-lightest text-white":
+                      recordsObj.page === pg,
                     "bg-white text-black": recordsObj.page !== pg,
                   })}
                 >
@@ -513,7 +557,7 @@ function PaginationBlock({ recordsObj, dispatch }) {
                 onClick={() => handlePageClick(pg)}
                 className={clsx({
                   "cursor-pointer rounded-md border border-black/5 px-[16px] py-[10px] font-manrope font-[600] text-[12px]": true,
-                  "bg-blue-700 text-white": recordsObj.page === pg,
+                  "bg-gray-palette-lightest text-white": recordsObj.page === pg,
                   "bg-white text-black": recordsObj.page !== pg,
                 })}
               >
@@ -536,7 +580,8 @@ function PaginationBlock({ recordsObj, dispatch }) {
                     onClick={() => handlePageClick(pg)}
                     className={clsx({
                       "cursor-pointer rounded-md border border-black/5 px-[16px] py-[10px] font-manrope font-[600] text-[12px]": true,
-                      "bg-blue-700 text-white": recordsObj.page === pg,
+                      "bg-gray-palette-lightest text-white":
+                        recordsObj.page === pg,
                       "bg-white text-black": recordsObj.page !== pg,
                     })}
                   >
@@ -591,7 +636,8 @@ function PaginationBlock({ recordsObj, dispatch }) {
                     onClick={() => handlePageClick(pg)}
                     className={clsx({
                       "cursor-pointer rounded-md border border-black/5 px-[16px] py-[10px] font-manrope font-[600] text-[12px]": true,
-                      "bg-blue-700 text-white": recordsObj.page === pg,
+                      "bg-gray-palette-lightest text-white":
+                        recordsObj.page === pg,
                       "bg-white text-black": recordsObj.page !== pg,
                     })}
                   >
@@ -630,7 +676,8 @@ function PaginationBlock({ recordsObj, dispatch }) {
                       onClick={() => handlePageClick(pg)}
                       className={clsx({
                         "cursor-pointer rounded-md border border-black/5 px-[16px] py-[10px] font-manrope font-[600] text-[12px]": true,
-                        "bg-blue-700 text-white": recordsObj.page === pg,
+                        "bg-gray-palette-lightest text-white":
+                          recordsObj.page === pg,
                         "bg-white text-black": recordsObj.page !== pg,
                       })}
                     >
@@ -668,4 +715,12 @@ function getStatus(state) {
   } else if (state === "Approved") {
     return "Approved";
   } else return "Rejected";
+}
+
+function compareDatum(datum1, datum2) {
+  if (datum1 !== null && datum2 === null) return true;
+  else if (datum1 === null && datum2 !== null) return true;
+  else if (datum1 === null && datum2 === null) return false;
+  else if (datum1.id !== datum2.id) return true;
+  else return false;
 }

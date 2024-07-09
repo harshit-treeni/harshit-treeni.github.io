@@ -1,6 +1,5 @@
 import { HiDotsVertical } from "react-icons/hi";
 import PinIcon from "../icons/PinIcon";
-import { CustomGrayDark, CustomGrayLight, CustomPurpleDark } from "../colors";
 
 export default function WidgetContainer({ children, title, subtitle, padStr }) {
   return (
@@ -8,18 +7,12 @@ export default function WidgetContainer({ children, title, subtitle, padStr }) {
       style={{ boxShadow: "0px 4px 4px 0px #EFEFEF" }}
       className="rounded-[14px] overflow-hidden"
     >
-      <div
-        style={{ background: CustomPurpleDark }}
-        className="w-full h-[72px] px-[28px] py-[16px]"
-      >
+      <div className="w-full h-[72px] px-[28px] py-[16px] bg-purple-200">
         <div className="flex justify-between items-center">
           {subtitle ? (
             <div className="flex flex-col justify-start items-start h-[40px]">
               <div className="text-[16px] font-[500]">{title}</div>
-              <div
-                style={{ color: CustomGrayDark }}
-                className="text-[14px] font-[500] font-manrope "
-              >
+              <div className="text-[14px] font-[500] font-manrope text-gray-500">
                 {subtitle}
               </div>
             </div>
@@ -32,10 +25,7 @@ export default function WidgetContainer({ children, title, subtitle, padStr }) {
               <PinIcon color="#4A47EB" />
             </div>
             <div className="w-[8px]" />
-            <div
-              style={{ background: CustomGrayLight }}
-              className="w-[32px] h-[32px] rounded-full flex justify-center items-center"
-            >
+            <div className="w-[32px] h-[32px] rounded-full flex justify-center items-center bg-gray-100">
               <HiDotsVertical className="text-[black]" />
             </div>
           </div>

@@ -13,6 +13,7 @@ import Home from "./routes/Home";
 import Main from "./Main";
 
 import "@glideapps/glide-data-grid/dist/index.css";
+import SuppliersPage from "./routes/SuppliersPage";
 
 const router = createHashRouter([
   {
@@ -35,6 +36,10 @@ const router = createHashRouter([
       {
         path: "/data-management/data-status-report",
         element: <DataStatusReport />,
+      },
+      {
+        path: "/supply-chain/suppliers",
+        element: <SuppliersPage />,
       },
     ],
   },

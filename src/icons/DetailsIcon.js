@@ -1,4 +1,4 @@
-export default function DetailsIcon({ color }) {
+export default function DetailsIcon({ color, ...props }) {
   return (
     <svg
       width="37"
@@ -6,6 +6,7 @@ export default function DetailsIcon({ color }) {
       viewBox="0 0 37 37"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      {...props}
     >
       <path
         d="M35.9873 18.148C35.9873 27.7572 28.2401 35.5402 18.6919 35.5402C9.14368 35.5402 1.39648 27.7572 1.39648 18.148C1.39648 8.5388 9.14368 0.755859 18.6919 0.755859C28.2401 0.755859 35.9873 8.5388 35.9873 18.148Z"

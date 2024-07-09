@@ -1,5 +1,3 @@
-import { CustomGrayDark } from "../colors";
-
 export default function WaterDiscTable({ WaterDiscHeadings, WaterDiscRows }) {
   return (
     <table className="w-full">
@@ -25,8 +23,7 @@ export default function WaterDiscTable({ WaterDiscHeadings, WaterDiscRows }) {
                 return (
                   <td
                     key={index}
-                    style={{ color: CustomGrayDark }}
-                    className="text-[13px] leading-[16px] font-[600] text-left p-[40px] first:font-[700] first:text-[black]"
+                    className="text-gray-500 text-[13px] leading-[16px] font-[600] text-left p-[40px] first:font-[700] first:text-[black]"
                   >
                     {element}
                   </td>

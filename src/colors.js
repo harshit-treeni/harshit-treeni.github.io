@@ -9,3 +9,12 @@ export const CustomBlueLight = "#E1E0FF"; // indigo-100
 
 export const CustomPurpleDark = "#DBDBF6"; // purple-200
 export const CustomPurpleLight = "#F6F6FB"; // purple-50
+
+export const GrayPalette = Object.freeze({
+  LIGHTEST: "#8DA4AC",
+  LIGHTER: "#8095A7",
+  LIGHT: "#7B859F",
+  ACCENT: "#7D7392",
+  DARK: "#81617E",
+  DARKEST: "#824F63",
+});
