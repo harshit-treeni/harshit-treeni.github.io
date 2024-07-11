@@ -1,7 +1,9 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import DataEditor, { GridCellKind } from "@glideapps/glide-data-grid";
 import "@glideapps/glide-data-grid/dist/index.css";
 import { BiSearchAlt } from "react-icons/bi";
+import { useLayer } from "react-laag";
+import Select from "react-select";
 
 const teal = {
   primaryColor: "#009688", // Teal
@@ -36,47 +38,40 @@ const customTheme = {
   editorFontSize: "20px",
 };
 
+const columns = [
+  { title: "Supplier Name", id: "supplier", grow: 1 },
+  { title: "Locations", id: "locations", grow: 1, hasMenu: true },
+  { title: "Contact Person", id: "person", grow: 1 },
+  { title: "Email", id: "email", grow: 1 },
+  { title: "Address", id: "address", grow: 1 },
+];
+
 export default function SuppliersPage() {
-  const columns = [
-    { title: "Supplier Name", id: "supplier", grow: 1 },
-    { title: "Locations", id: "locations", grow: 1 },
-    { title: "Contact Person", id: "person", grow: 1 },
-    { title: "Email", id: "email", grow: 1 },
-    { title: "Address", id: "address", grow: 1 },
-  ];
+  const [locations, setLocations] = useState(null);
+  const [data, setData] = useState([]);
 
-  const initialData = [
-    {
-      supplier: "John Doe",
-      locations: "Loc A, Loc B",
-      person: "Person A",
-      email: "a@example.com",
-      address: "New York",
-    },
-    {
-      supplier: "John Doe",
-      locations: "Loc A, Loc B",
-      person: "Person A",
-      email: "a@example.com",
-      address: "New York",
-    },
-    {
-      supplier: "John Doe",
-      locations: "Loc A, Loc B",
-      person: "Person A",
-      email: "a@example.com",
-      address: "New York",
-    },
-    {
-      supplier: "John Doe",
-      locations: "Loc A, Loc B",
-      person: "Person A",
-      email: "a@example.com",
-      address: "New York",
-    },
-  ];
+  const onMessageListener = useCallback((e) => {
+    if (e.data.type === "data") {
+      if (e.data.data.suppliers)
+        setData(
+          e.data.data.suppliers.map((supplierObj) => ({
+            email: supplierObj.email,
+            supplier: supplierObj.email,
+            locations: supplierObj.locations,
+            person: supplierObj.name,
+            address: "address",
+          }))
+        );
 
-  const [data, setData] = useState(initialData);
+      if (e.data.data.locations) setLocations(e.data.data.locations);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("message", onMessageListener);
+    return () => window.removeEventListener("message", onMessageListener);
+  }, [onMessageListener]);
+
   const [gridSelection, setGridSelection] = useState();
   const gridRef = useRef(null);
 
@@ -84,19 +79,25 @@ export default function SuppliersPage() {
     (cell) => {
       const [col, row] = cell;
       const dataRow = data[row];
-      const dataKey = Object.keys(dataRow)[col];
+      const dataKey = columns.map((obj) => obj.id)[col];
       const cellData = dataRow[dataKey];
 
-      if ([undefined, "", null].includes(cellData)) {
+      if (col === 1) {
         return {
           kind: GridCellKind.Text,
-          allowOverlay: true,
-          readonly: false,
-          displayData: cellData?.toString() || "",
+          allowOverlay: false,
+          readonly: true,
+          displayData: cellData?.join(",") || "",
           data: cellData,
-          themeOverride: {
-            bgCell: "#FF000026",
-          },
+          themeOverride: [undefined, "", null].includes(cellData)
+            ? {
+                ...customTheme,
+                bgCell: "#FF000026",
+              }
+            : {
+                ...customTheme,
+                bgCell: row % 2 === 0 ? "white" : teal.lightAccentColor,
+              },
         };
       }
 
@@ -106,6 +107,15 @@ export default function SuppliersPage() {
         readonly: false,
         displayData: cellData?.toString() || "",
         data: cellData,
+        themeOverride: [undefined, "", null].includes(cellData)
+          ? {
+              ...customTheme,
+              bgCell: "#FF000026",
+            }
+          : {
+              ...customTheme,
+              bgCell: row % 2 === 0 ? "white" : teal.lightAccentColor,
+            },
       };
     },
     [data]
@@ -138,6 +148,7 @@ export default function SuppliersPage() {
         result += cell.data;
         if (col < x + width - 1) result += "\t";
       }
+      for (let col = x + width; col < 5; col++) result += "\t";
       if (row < y + height - 1) result += "\n";
     }
 
@@ -182,6 +193,39 @@ export default function SuppliersPage() {
     };
   }, []);
 
+  const [menu, setMenu] = React.useState();
+  const isOpen = menu !== undefined;
+  const { layerProps, renderLayer } = useLayer({
+    isOpen,
+    auto: true,
+    placement: "bottom-end",
+    triggerOffset: 2,
+    onOutsideClick: (...args) => {
+      if (menu?.first === true) {
+        console.log("first");
+        setMenu({ ...menu, first: false });
+      } else {
+        setMenu(undefined);
+      }
+    },
+    trigger: {
+      getBounds: () => ({
+        left: menu?.bounds.x ?? 0,
+        top: menu?.bounds.y ?? 0,
+        width: menu?.bounds.width ?? 0,
+        height: menu?.bounds.height ?? 0,
+        right: (menu?.bounds.x ?? 0) + (menu?.bounds.width ?? 0),
+        bottom: (menu?.bounds.y ?? 0) + (menu?.bounds.height ?? 0),
+      }),
+    },
+  });
+
+  const handleCellClicked = (...args) => {
+    if (args[0][0] === 1)
+      if (menu?.cell[1] !== args[0][1])
+        setMenu({ cell: args[0], bounds: args[1].bounds, first: true });
+  };
+
   return (
     <div className="p-[48px]">
       <div className="flex justify-between items-end">
@@ -199,7 +243,21 @@ export default function SuppliersPage() {
         </div>
 
         <div className="flex flex-col items-end justify-start">
-          <div className="bg-teal-accent-dark text-white text-[16px] rounded-xl px-[14px] py-[10px]">
+          <div
+            onClick={() => {
+              setData([
+                {
+                  supplier: "",
+                  locations: "",
+                  person: "",
+                  email: "",
+                  address: "",
+                },
+                ...data,
+              ]);
+            }}
+            className="bg-teal-accent-dark text-white text-[16px] rounded-xl px-[14px] py-[10px]"
+          >
             ADD NEW SUPPLIER
           </div>
           <div className="h-[6px]" />
@@ -230,7 +288,28 @@ export default function SuppliersPage() {
           getRowThemeOverride={getRowThemeOverride}
           headerHeight={72}
           rowHeight={84}
+          onCellClicked={handleCellClicked}
         />
+        {isOpen &&
+          renderLayer(
+            <div
+              className="bg-white p-3 rounded-xl border border-black/[0.1] shadow-md"
+              {...layerProps}
+            >
+              <Select
+                defaultValue={[{ value: "chocolate", label: "Chocolate" }]}
+                isMulti
+                options={[
+                  { value: "chocolate", label: "Chocolate" },
+                  { value: "strawberry", label: "Strawberry" },
+                  { value: "vanilla", label: "Vanilla" },
+                ]}
+                onChange={(...args) => {
+                  console.log(args);
+                }}
+              />
+            </div>
+          )}
       </div>
 
       <div className="h-[16px]" />

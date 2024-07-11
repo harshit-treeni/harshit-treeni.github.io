@@ -29,6 +29,7 @@ function DSRReducer(state, action) {
           recordsObj: true,
           categories: true,
           indicators: true,
+          owners: true,
         },
       };
     case "category change":
@@ -38,12 +39,22 @@ function DSRReducer(state, action) {
         loadingState: {
           recordsObj: true,
           indicators: true,
+          owners: true,
         },
       };
     case "indicator change":
       return {
         ...state,
         indicator: action.indicator,
+        loadingState: {
+          recordsObj: true,
+          owners: true,
+        },
+      };
+    case "owner change":
+      return {
+        ...state,
+        owner: action.owner,
         loadingState: {
           recordsObj: true,
         },
@@ -83,6 +94,15 @@ function DSRReducer(state, action) {
           indicators: false,
         },
       };
+    case "owners change":
+      return {
+        ...state,
+        owners: action.owners,
+        loadingState: {
+          ...state.loadingState,
+          owners: false,
+        },
+      };
     case "dashboardData change":
       return {
         ...state,
@@ -114,10 +134,12 @@ export default function DataStatusReport() {
     location: null,
     category: null,
     indicator: null,
+    owner: null,
     pageOption: { id: 1, option: 10 },
     locations: [],
     categories: [],
     indicators: [],
+    owners: [],
     dashboardData: [
       {
         name: "Approved",
@@ -138,6 +160,7 @@ export default function DataStatusReport() {
       locations: true,
       categories: true,
       indicators: true,
+      owners: true,
     },
   });
 
@@ -145,10 +168,12 @@ export default function DataStatusReport() {
     location,
     category,
     indicator,
+    owner,
     pageOption,
     locations,
     categories,
     indicators,
+    owners,
     dashboardData,
     recordsObj,
     loadingState,
@@ -158,11 +183,11 @@ export default function DataStatusReport() {
     window.parent.postMessage(
       {
         type: "sync",
-        data: { location, category, indicator, pageOption },
+        data: { location, category, indicator, owner, pageOption },
       },
       "*"
     );
-  }, [location, category, indicator, pageOption]);
+  }, [location, category, indicator, owner, pageOption]);
 
   const onMessageListener = useCallback(
     (e) => {
@@ -195,6 +220,12 @@ export default function DataStatusReport() {
             indicators: e.data.data.indicators.data_point_details,
           });
 
+        if (compareTwoArraysOfObj(e.data.data.owners, owners))
+          dispatch({
+            type: "owners change",
+            owners: e.data.data.owners,
+          });
+
         if (
           compareDashboardData(
             getDashboardDataObj(e.data.data.dashboardData),
@@ -223,7 +254,7 @@ export default function DataStatusReport() {
         }
       }
     },
-    [locations, categories, indicators, dashboardData, recordsObj]
+    [locations, categories, indicators, owners, dashboardData, recordsObj]
   );
 
   useEffect(() => {
@@ -350,12 +381,20 @@ export default function DataStatusReport() {
         )}
         <div className="w-[16px]" />
 
-        <MyComboBox
-          placeholder={"Owner"}
-          value={null}
-          onChange={() => {}}
-          options={[]}
-        />
+        {loadingState.owners ? (
+          <ComboBoxLoader type={"clouds"} />
+        ) : (
+          <MyComboBox
+            placeholder={"Owner"}
+            value={owner}
+            onChange={(val) => {
+              if (compareDatum(val, owner)) {
+                dispatch({ type: "owner change", owner: val });
+              }
+            }}
+            options={owners}
+          />
+        )}
       </div>
 
       <div className="h-[28px]" />
