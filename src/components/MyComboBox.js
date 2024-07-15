@@ -10,10 +10,13 @@ import { CheckIcon, ChevronDownIcon } from "@heroicons/react/20/solid";
 import clsx from "clsx";
 import { useState } from "react";
 
+import { IoMdCloseCircle } from "react-icons/io";
+
 export default function MyComboBox({
   placeholder,
   value,
   onChange,
+  onClear,
   options = [],
 }) {
   const [query, setQuery] = useState("");
@@ -29,14 +32,24 @@ export default function MyComboBox({
     <div className="w-[140px]">
       <Combobox value={value} onChange={(value) => onChange(value)}>
         <div className="relative">
+          <IoMdCloseCircle
+            onClick={onClear}
+            className={clsx(
+              "absolute top-[9px] left-[6px] text-[22px] text-red-400 cursor-pointer",
+              { hidden: value === null },
+              { visible: value !== null }
+            )}
+          />
           <ComboboxInput
             placeholder={placeholder}
             className={clsx(
-              "w-full rounded-full border-none bg-white py-2 pr-8 pl-4 text-sm/6 text-black",
+              "w-full rounded-full border-none bg-white py-2 pr-8 text-sm/6 text-black",
               "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-black/25",
-              "placeholder:text-black/50"
+              "placeholder:text-black/50",
+              { "pl-4": value === null },
+              { "pl-[30px]": value !== null }
             )}
-            displayValue={(person) => person?.name}
+            displayValue={(value) => value?.name}
             onChange={(event) => setQuery(event.target.value)}
           />
           <ComboboxButton className="group absolute inset-y-0 right-0 px-2.5">

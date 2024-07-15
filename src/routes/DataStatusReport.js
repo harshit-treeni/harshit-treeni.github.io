@@ -136,10 +136,10 @@ export default function DataStatusReport() {
     indicator: null,
     owner: null,
     pageOption: { id: 1, option: 10 },
-    locations: [],
-    categories: [],
-    indicators: [],
-    owners: [],
+    locations: { arr: [] },
+    categories: { arr: [] },
+    indicators: { arr: [] },
+    owners: { arr: [] },
     dashboardData: [
       {
         name: "Approved",
@@ -154,7 +154,7 @@ export default function DataStatusReport() {
         number: 62700,
       },
     ],
-    recordsObj: null,
+    recordsObj: { records: [], selectAll: false },
     loadingState: {
       recordsObj: true,
       locations: true,
@@ -191,36 +191,26 @@ export default function DataStatusReport() {
 
   const onMessageListener = useCallback(
     (e) => {
-      if (e.data.type === "data") {
-        if (compareTwoArraysOfObj(e.data.data.locations, locations))
+      if (e.data.type === "dsr_all_data") {
+        if (compareId(locations, e.data.data.locations))
           dispatch({
             type: "locations change",
             locations: e.data.data.locations,
           });
 
-        if (
-          compareTwoArraysOfObj(
-            e.data.data.categories.orgNode_category_details,
-            categories
-          )
-        )
+        if (compareId(categories, e.data.data.categories))
           dispatch({
             type: "categories change",
-            categories: e.data.data.categories.orgNode_category_details,
+            categories: e.data.data.categories,
           });
 
-        if (
-          compareTwoArraysOfObj(
-            e.data.data.indicators.data_point_details,
-            indicators
-          )
-        )
+        if (compareId(indicators, e.data.data.indicators))
           dispatch({
             type: "indicators change",
-            indicators: e.data.data.indicators.data_point_details,
+            indicators: e.data.data.indicators,
           });
 
-        if (compareTwoArraysOfObj(e.data.data.owners, owners))
+        if (compareId(owners, e.data.data.owners))
           dispatch({
             type: "owners change",
             owners: e.data.data.owners,
@@ -238,20 +228,15 @@ export default function DataStatusReport() {
           });
         }
 
-        if (e.data.data.recordsObj) {
-          if (
-            recordsObj === null ||
-            e.data.data.recordsObj.id !== recordsObj.id
-          )
-            dispatch({
-              type: "recordsObj change",
-              recordsObj: {
-                ...e.data.data.recordsObj,
-                records: e.data.data.recordsObj.records.map(mapRecord),
-                selectAll: false,
-              },
-            });
-        }
+        if (compareId(recordsObj, e.data.data.recordsObj))
+          dispatch({
+            type: "recordsObj change",
+            recordsObj: {
+              ...e.data.data.recordsObj,
+              records: e.data.data.recordsObj.records.map(mapRecord),
+              selectAll: false,
+            },
+          });
       }
     },
     [locations, categories, indicators, owners, dashboardData, recordsObj]
@@ -317,7 +302,16 @@ export default function DataStatusReport() {
           <AnimatePresence>
             {isOpen && (
               <div className="bg-white rounded-lg p-[4px]" {...layerProps}>
-                <div className="text-gray-500 cursor-pointer hover:bg-gray-50 rounded-md py-[8px] px-[12px] flex items-center">
+                <div
+                  onClick={() => {
+                    console.log("export button clicked");
+                    window.parent.postMessage(
+                      { type: "handle_dsr_export" },
+                      "*"
+                    );
+                  }}
+                  className="text-gray-500 cursor-pointer hover:bg-gray-50 rounded-md py-[8px] px-[12px] flex items-center"
+                >
                   <BiExport className="text-gray-500 text-[28px] pr-[8px]" />
                   Export
                 </div>
@@ -342,11 +336,14 @@ export default function DataStatusReport() {
           <MyComboBox
             placeholder={"Location"}
             value={location}
+            onClear={() =>
+              dispatch({ type: "location change", location: null })
+            }
             onChange={(val) => {
               if (compareDatum(val, location))
                 dispatch({ type: "location change", location: val });
             }}
-            options={locations}
+            options={locations.arr}
           />
         )}
         <div className="w-[16px]" />
@@ -357,11 +354,14 @@ export default function DataStatusReport() {
           <MyComboBox
             placeholder={"Category"}
             value={category}
+            onClear={() =>
+              dispatch({ type: "category change", category: null })
+            }
             onChange={(val) => {
               if (compareDatum(val, category))
                 dispatch({ type: "category change", category: val });
             }}
-            options={categories}
+            options={categories.arr}
           />
         )}
         <div className="w-[16px]" />
@@ -372,11 +372,14 @@ export default function DataStatusReport() {
           <MyComboBox
             placeholder={"Indicator"}
             value={indicator}
+            onClear={() =>
+              dispatch({ type: "indicator change", indicator: null })
+            }
             onChange={(val) => {
               if (compareDatum(val, indicator))
                 dispatch({ type: "indicator change", indicator: val });
             }}
-            options={indicators}
+            options={indicators.arr}
           />
         )}
         <div className="w-[16px]" />
@@ -387,12 +390,13 @@ export default function DataStatusReport() {
           <MyComboBox
             placeholder={"Owner"}
             value={owner}
+            onClear={() => dispatch({ type: "owner change", owner: null })}
             onChange={(val) => {
               if (compareDatum(val, owner)) {
                 dispatch({ type: "owner change", owner: val });
               }
             }}
-            options={owners}
+            options={owners.arr}
           />
         )}
       </div>
@@ -450,12 +454,7 @@ export default function DataStatusReport() {
       </div>
       <div className="h-[42px]" />
       <div className="w-full rounded-[14px] overflow-hidden relative">
-        <RecordsBlock
-          recordsObj={
-            recordsObj !== null ? recordsObj : { records: [], selectAll: false }
-          }
-          dispatch={dispatch}
-        />
+        <RecordsBlock recordsObj={recordsObj} dispatch={dispatch} />
         {loadingState.recordsObj ? <RecordsLoader /> : null}
       </div>
       <div className="h-[28px]" />
@@ -490,58 +489,6 @@ export default function DataStatusReport() {
       </div>
     </div>
   );
-}
-
-function mapRecord(record) {
-  return {
-    select: false,
-    category: record.indicator_category ? record.indicator_category : "",
-    indicator: record.indicator_name ? record.indicator_name : "",
-    status: record.state ? getStatus(record.state) : "",
-    startDate: record.start_date ? record.start_date : "",
-    endDate: record.end_date ? record.end_date : "",
-    siteName: record.site ? record.site : "",
-    count: record.record_count.toString() ? record.record_count.toString() : "",
-    owner: record.assigned_to ? record.assigned_to : "",
-    id: record.id,
-  };
-}
-
-function compareTwoArraysOfObj(arr1, arr2) {
-  if (arr1.length !== arr2.length) return true;
-  else if (
-    arr1[0] &&
-    (arr1[0].id !== arr2[0].id ||
-      arr1[arr1.length - 1].id !== arr2[arr2.length - 1].id)
-  )
-    return true;
-  else return false;
-}
-
-function compareDashboardData(dashboardDataOne, dashboardDataTwo) {
-  if (dashboardDataOne[0].number !== dashboardDataTwo[0].number) return true;
-  else if (dashboardDataOne[1].number !== dashboardDataTwo[1].number)
-    return true;
-  else if (dashboardDataOne[2].number !== dashboardDataTwo[2].number)
-    return true;
-  else return false;
-}
-
-function getDashboardDataObj(dashboardData) {
-  return [
-    {
-      name: "Approved",
-      number: dashboardData.approved_records,
-    },
-    {
-      name: "Pending",
-      number: dashboardData.pending_records,
-    },
-    {
-      name: "Rejected",
-      number: dashboardData.reject_records,
-    },
-  ];
 }
 
 function PaginationBlock({ recordsObj, dispatch }) {
@@ -746,6 +693,57 @@ function PaginationBlock({ recordsObj, dispatch }) {
       }
     }
   }
+}
+
+function mapRecord(record) {
+  return {
+    select: false,
+    category: record.indicator_category ? record.indicator_category : "",
+    indicator: record.indicator_name ? record.indicator_name : "",
+    status: record.state ? getStatus(record.state) : "",
+    startDate: record.start_date ? record.start_date : "",
+    endDate: record.end_date ? record.end_date : "",
+    siteName: record.site ? record.site : "",
+    count: record.record_count.toString() ? record.record_count.toString() : "",
+    owner: record.assigned_to ? record.assigned_to : "",
+    id: record.id,
+  };
+}
+
+function compareId(oldVal, newVal) {
+  if (oldVal.id === undefined) {
+    if (newVal.id !== undefined) return true;
+  } else {
+    if (oldVal.id !== newVal.id) return true;
+  }
+
+  return false;
+}
+
+function compareDashboardData(dashboardDataOne, dashboardDataTwo) {
+  if (dashboardDataOne[0].number !== dashboardDataTwo[0].number) return true;
+  else if (dashboardDataOne[1].number !== dashboardDataTwo[1].number)
+    return true;
+  else if (dashboardDataOne[2].number !== dashboardDataTwo[2].number)
+    return true;
+  else return false;
+}
+
+function getDashboardDataObj(dashboardData) {
+  return [
+    {
+      name: "Approved",
+      number: dashboardData.approved_records,
+    },
+    {
+      name: "Pending",
+      number: dashboardData.pending_records,
+    },
+    {
+      name: "Rejected",
+      number: dashboardData.reject_records,
+    },
+  ];
 }
 
 function getStatus(state) {
