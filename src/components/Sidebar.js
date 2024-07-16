@@ -9,11 +9,8 @@ import ShowDockIcon from "../icons/ShowDockIcon";
 import TVIcon from "../icons/TVIcon";
 import WaterIcon from "../icons/WaterIcon";
 import BarGraphIcon from "../icons/BarGraphIcon";
-import BellIcon from "../icons/BellIcon";
 import DocumentIcon from "../icons/DocumentIcon";
 import EditIcon from "../icons/EditIcon";
-import PeopleIcon from "../icons/PeopleIcon";
-import SupplyChainIcon from "../icons/SupplyChainIcon";
 import SearchIcon from "../icons/SearchIcon";
 import { GoPeople } from "react-icons/go";
 

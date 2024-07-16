@@ -18,6 +18,11 @@ import { Arrow, useLayer } from "react-laag";
 import { AnimatePresence } from "framer-motion";
 import FYSelect from "../components/FYSelect";
 
+import {
+  MdKeyboardDoubleArrowRight,
+  MdOutlineKeyboardDoubleArrowLeft,
+} from "react-icons/md";
+
 function DSRReducer(state, action) {
   // eslint-disable-next-line default-case
   switch (action.type) {
@@ -26,6 +31,7 @@ function DSRReducer(state, action) {
         ...state,
         location: action.location,
         loadingState: {
+          ...state.loadingState,
           recordsObj: true,
           categories: true,
           indicators: true,
@@ -37,6 +43,7 @@ function DSRReducer(state, action) {
         ...state,
         category: action.category,
         loadingState: {
+          ...state.loadingState,
           recordsObj: true,
           indicators: true,
           owners: true,
@@ -47,6 +54,7 @@ function DSRReducer(state, action) {
         ...state,
         indicator: action.indicator,
         loadingState: {
+          ...state.loadingState,
           recordsObj: true,
           owners: true,
         },
@@ -56,6 +64,7 @@ function DSRReducer(state, action) {
         ...state,
         owner: action.owner,
         loadingState: {
+          ...state.loadingState,
           recordsObj: true,
         },
       };
@@ -64,6 +73,16 @@ function DSRReducer(state, action) {
         ...state,
         pageOption: action.pageOption,
         loadingState: {
+          ...state.loadingState,
+          recordsObj: true,
+        },
+      };
+    case "FYOption change":
+      return {
+        ...state,
+        FYOption: action.FYOption,
+        loadingState: {
+          ...state.loadingState,
           recordsObj: true,
         },
       };
@@ -136,6 +155,7 @@ export default function DataStatusReport() {
     indicator: null,
     owner: null,
     pageOption: { id: 1, option: 10 },
+    FYOption: { id: 0 },
     locations: { arr: [] },
     categories: { arr: [] },
     indicators: { arr: [] },
@@ -170,6 +190,7 @@ export default function DataStatusReport() {
     indicator,
     owner,
     pageOption,
+    FYOption,
     locations,
     categories,
     indicators,
@@ -183,14 +204,18 @@ export default function DataStatusReport() {
     window.parent.postMessage(
       {
         type: "sync",
-        data: { location, category, indicator, owner, pageOption },
+        data: { location, category, indicator, owner, pageOption, FYOption },
       },
       "*"
     );
-  }, [location, category, indicator, owner, pageOption]);
+  }, [location, category, indicator, owner, pageOption, FYOption]);
 
   const onMessageListener = useCallback(
     (e) => {
+      if (e.data.type === "dsr_fin_start_month") {
+        dispatch({ type: "FYOption change", FYOption: e.data.data });
+      }
+
       if (e.data.type === "dsr_all_data") {
         if (compareId(locations, e.data.data.locations))
           dispatch({
@@ -278,7 +303,7 @@ export default function DataStatusReport() {
             onClick={() => {
               window.history.go(-1);
             }}
-            className="font-[600] font-manrope text-[15px] leading-[18px]"
+            className="font-[600] font-manrope text-[15px] leading-[18px] select-none"
           >
             {"Back"}
           </div>
@@ -385,7 +410,7 @@ export default function DataStatusReport() {
         <div className="w-[16px]" />
 
         {loadingState.owners ? (
-          <ComboBoxLoader type={"clouds"} />
+          <ComboBoxLoader type={"fishy"} />
         ) : (
           <MyComboBox
             placeholder={"Owner"}
@@ -449,7 +474,13 @@ export default function DataStatusReport() {
             {"Select Financial Year"}
           </div>
           <div className="w-[16px]" />
-          <FYSelect value={{ id: 1, option: 2025 }} />
+          <FYSelect
+            value={FYOption}
+            onChange={(value) => {
+              if (value.id !== FYOption.id)
+                dispatch({ type: "FYOption change", FYOption: value });
+            }}
+          />
         </div>
       </div>
       <div className="h-[42px]" />
@@ -461,7 +492,7 @@ export default function DataStatusReport() {
       <div className="flex items-center justify-between w-full">
         <div className="text-gray-500 text-[14px] font-manrope flex items-center">
           <div className="font-[700] text-black">
-            {recordsObj
+            {recordsObj.id
               ? `${
                   recordsObj.totalRecords === 0
                     ? 0
@@ -474,7 +505,7 @@ export default function DataStatusReport() {
               : null}
           </div>
           <div className="w-[6px]" />
-          {recordsObj ? `of ${recordsObj.totalRecords}` : null}
+          {recordsObj.id ? `of ${recordsObj.totalRecords}` : null}
           <div className="w-[56px]" />
           {"Results per page"}
           <div className="w-[28px]" />
@@ -492,6 +523,9 @@ export default function DataStatusReport() {
 }
 
 function PaginationBlock({ recordsObj, dispatch }) {
+  const handleFirst = () => handlePageClick(1);
+  const handleLast = () => handlePageClick(recordsObj?.totalPages);
+
   const handlePageClick = (pg) => {
     dispatch({ type: "recordsObj loading" });
     if (recordsObj.page === pg) return;
@@ -508,7 +542,7 @@ function PaginationBlock({ recordsObj, dispatch }) {
     window.parent.postMessage({ type: "prevPage" }, "*");
   };
 
-  if (recordsObj === null || recordsObj.totalPages === 1) return null;
+  if (!recordsObj.id || recordsObj.totalPages === 1) return null;
   else {
     if (recordsObj.totalPages === 2) {
       return (
@@ -583,12 +617,27 @@ function PaginationBlock({ recordsObj, dispatch }) {
               onClick={() => handleNext()}
               className="cursor-pointer flex items-center bg-white rounded-md border border-black/5 py-[8px] pl-[12px] pr-[8px]"
             >
-              <div className="text-[12px] font-[600] font-manrope">
+              <div className="select-none text-[12px] font-[600] font-manrope">
                 {"Next"}
               </div>
               <div className="w-[6px]" />
               <div className="bg-gray-300 w-[26px] h-[26px] rounded-full flex items-center justify-center">
                 <ChevronRightIcon className="size-4 fill-black" />
+              </div>
+            </div>
+
+            <div className="w-[10px]" />
+
+            <div
+              onClick={() => handleLast()}
+              className="cursor-pointer flex items-center bg-white rounded-md border border-black/5 py-[8px] pl-[12px] pr-[8px]"
+            >
+              <div className="select-none text-[12px] font-[600] font-manrope">
+                {"Last"}
+              </div>
+              <div className="w-[6px]" />
+              <div className="bg-gray-300 w-[26px] h-[26px] rounded-full flex items-center justify-center">
+                <MdKeyboardDoubleArrowRight className="size-4 fill-black" />
               </div>
             </div>
           </div>
@@ -597,6 +646,21 @@ function PaginationBlock({ recordsObj, dispatch }) {
         return (
           <div className="flex items-center">
             <div
+              onClick={() => handleFirst()}
+              className="cursor-pointer flex items-center bg-white rounded-md border border-black/5 py-[8px] pr-[12px] pl-[8px]"
+            >
+              <div className="bg-gray-300 w-[26px] h-[26px] rounded-full flex items-center justify-center">
+                <MdOutlineKeyboardDoubleArrowLeft className="size-4 fill-black" />
+              </div>
+              <div className="w-[6px]" />
+              <div className="select-none text-[12px] font-[600] font-manrope">
+                {"First"}
+              </div>
+            </div>
+
+            <div className="w-[10px]" />
+
+            <div
               onClick={() => handlePrev()}
               className="cursor-pointer flex items-center bg-white rounded-md border border-black/5 py-[8px] pr-[12px] pl-[8px]"
             >
@@ -604,7 +668,7 @@ function PaginationBlock({ recordsObj, dispatch }) {
                 <ChevronLeftIcon className="size-4 fill-black" />
               </div>
               <div className="w-[6px]" />
-              <div className="text-[12px] font-[600] font-manrope">
+              <div className="select-none text-[12px] font-[600] font-manrope">
                 {"Back"}
               </div>
             </div>
@@ -640,6 +704,21 @@ function PaginationBlock({ recordsObj, dispatch }) {
         return (
           <div className="flex items-center">
             <div
+              onClick={() => handleFirst()}
+              className="cursor-pointer flex items-center bg-white rounded-md border border-black/5 py-[8px] pr-[12px] pl-[8px]"
+            >
+              <div className="bg-gray-300 w-[26px] h-[26px] rounded-full flex items-center justify-center">
+                <MdOutlineKeyboardDoubleArrowLeft className="size-4 fill-black" />
+              </div>
+              <div className="w-[6px]" />
+              <div className="select-none text-[12px] font-[600] font-manrope">
+                {"First"}
+              </div>
+            </div>
+
+            <div className="w-[10px]" />
+
+            <div
               onClick={() => handlePrev()}
               className="cursor-pointer flex items-center bg-white rounded-md border border-black/5 py-[8px] pr-[12px] pl-[8px]"
             >
@@ -647,7 +726,7 @@ function PaginationBlock({ recordsObj, dispatch }) {
                 <ChevronLeftIcon className="size-4 fill-black" />
               </div>
               <div className="w-[6px]" />
-              <div className="text-[12px] font-[600] font-manrope">
+              <div className="select-none text-[12px] font-[600] font-manrope">
                 {"Back"}
               </div>
             </div>
@@ -680,12 +759,27 @@ function PaginationBlock({ recordsObj, dispatch }) {
               onClick={() => handleNext()}
               className="cursor-pointer flex items-center bg-white rounded-md border border-black/5 py-[8px] pl-[12px] pr-[8px]"
             >
-              <div className="text-[12px] font-[600] font-manrope">
+              <div className="select-none text-[12px] font-[600] font-manrope">
                 {"Next"}
               </div>
               <div className="w-[6px]" />
               <div className="bg-gray-300 w-[26px] h-[26px] rounded-full flex items-center justify-center">
                 <ChevronRightIcon className="size-4 fill-black" />
+              </div>
+            </div>
+
+            <div className="w-[10px]" />
+
+            <div
+              onClick={() => handleLast()}
+              className="cursor-pointer flex items-center bg-white rounded-md border border-black/5 py-[8px] pl-[12px] pr-[8px]"
+            >
+              <div className="select-none text-[12px] font-[600] font-manrope">
+                {"Last"}
+              </div>
+              <div className="w-[6px]" />
+              <div className="bg-gray-300 w-[26px] h-[26px] rounded-full flex items-center justify-center">
+                <MdKeyboardDoubleArrowRight className="size-4 fill-black" />
               </div>
             </div>
           </div>
