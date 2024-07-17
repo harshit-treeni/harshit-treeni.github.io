@@ -15,7 +15,6 @@ const year = date.getFullYear();
 export default function FYSelect({ value, onChange }) {
   if (value.id === 0) return null;
   else {
-    console.log(value, year);
     let FYOptions;
     if (value.startMonth === 4)
       if (month < 3)
@@ -46,8 +45,6 @@ export default function FYSelect({ value, onChange }) {
           FY: `${year - index}-${year - index + 1}`,
           startMonth: value.startMonth,
         }));
-
-    console.log(FYOptions);
 
     return (
       <div>

@@ -40,7 +40,7 @@ const customTheme = {
 
 const columns = [
   { title: "Supplier Name", id: "supplier", grow: 1 },
-  { title: "Locations", id: "locations", grow: 1, hasMenu: true },
+  { title: "Locations", id: "locations", grow: 1 },
   { title: "Contact Person", id: "person", grow: 1 },
   { title: "Email", id: "email", grow: 1 },
   { title: "Address", id: "address", grow: 1 },

@@ -334,6 +334,7 @@ export default function DataStatusReport() {
                       { type: "handle_dsr_export" },
                       "*"
                     );
+                    close();
                   }}
                   className="text-gray-500 cursor-pointer hover:bg-gray-50 rounded-md py-[8px] px-[12px] flex items-center"
                 >
@@ -455,6 +456,17 @@ export default function DataStatusReport() {
                   },
                   "*"
                 );
+                dispatch({
+                  type: "recordsObj change",
+                  recordsObj: {
+                    ...recordsObj,
+                    records: recordsObj.records.map((record) => ({
+                      ...record,
+                      select: false,
+                    })),
+                    selectAll: false,
+                  },
+                });
               }
             }
           }}
