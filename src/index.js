@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import { ToastContainer } from "react-toastify";
 
 import { RouterProvider, createHashRouter } from "react-router-dom";
 import ErrorPage from "./ErrorPage";
@@ -11,9 +12,10 @@ import DataEntry from "./routes/DataEntry";
 import DataStatusReport from "./routes/DataStatusReport";
 import Home from "./routes/Home";
 import Main from "./Main";
-
-import "@glideapps/glide-data-grid/dist/index.css";
 import SuppliersPage from "./routes/SuppliersPage";
+
+import "react-toastify/dist/ReactToastify.css";
+import "@glideapps/glide-data-grid/dist/index.css";
 
 const router = createHashRouter([
   {
@@ -47,9 +49,12 @@ const router = createHashRouter([
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
-  <React.StrictMode>
-    <DndProvider backend={HTML5Backend}>
-      <RouterProvider router={router} />
-    </DndProvider>
-  </React.StrictMode>
+  <>
+    <React.StrictMode>
+      <DndProvider backend={HTML5Backend}>
+        <RouterProvider router={router} />
+      </DndProvider>
+    </React.StrictMode>
+    <ToastContainer />
+  </>
 );

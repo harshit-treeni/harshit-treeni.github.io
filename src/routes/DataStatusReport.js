@@ -9,7 +9,7 @@ import PageSelect from "../components/PageSelect";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { BiExport } from "react-icons/bi";
 import MyComboBox from "../components/MyComboBox";
-import { useCallback, useEffect, useReducer, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import clsx from "clsx";
 
 import RecordsLoader from "../components/RecordsLoader";
@@ -22,6 +22,7 @@ import {
   MdKeyboardDoubleArrowRight,
   MdOutlineKeyboardDoubleArrowLeft,
 } from "react-icons/md";
+import { toast } from "react-toastify";
 
 function DSRReducer(state, action) {
   // eslint-disable-next-line default-case
@@ -216,6 +217,14 @@ export default function DataStatusReport() {
         dispatch({ type: "FYOption change", FYOption: e.data.data });
       }
 
+      if (e.data.type === "dsr_export_success") {
+        toast.update(toastID.current, {
+          render: "Exported file successfully",
+          type: "success",
+          autoClose: 5000,
+        });
+      }
+
       if (e.data.type === "dsr_all_data") {
         if (compareId(locations, e.data.data.locations))
           dispatch({
@@ -291,6 +300,8 @@ export default function DataStatusReport() {
     arrowOffset: 16, // let the arrow have some room to breath also
   });
 
+  const toastID = useRef(null);
+
   return (
     <div className="p-[48px] flex flex-col justify-start items-start ">
       <div className="w-full flex items-center">
@@ -335,6 +346,10 @@ export default function DataStatusReport() {
                       "*"
                     );
                     close();
+                    toastID.current = toast(<ExportLoadingToast />, {
+                      type: "info",
+                      autoClose: false,
+                    });
                   }}
                   className="text-gray-500 cursor-pointer hover:bg-gray-50 rounded-md py-[8px] px-[12px] flex items-center"
                 >
@@ -357,7 +372,7 @@ export default function DataStatusReport() {
         <div className="w-[32px]" />
 
         {loadingState.locations ? (
-          <ComboBoxLoader type={"day-night"} />
+          <ComboBoxLoader type={"simple"} />
         ) : (
           <MyComboBox
             placeholder={"Location"}
@@ -375,7 +390,7 @@ export default function DataStatusReport() {
         <div className="w-[16px]" />
 
         {loadingState.categories ? (
-          <ComboBoxLoader type={"waves"} />
+          <ComboBoxLoader type={"simple"} />
         ) : (
           <MyComboBox
             placeholder={"Category"}
@@ -393,7 +408,7 @@ export default function DataStatusReport() {
         <div className="w-[16px]" />
 
         {loadingState.indicators ? (
-          <ComboBoxLoader type={"clouds"} />
+          <ComboBoxLoader type={"simple"} />
         ) : (
           <MyComboBox
             placeholder={"Indicator"}
@@ -411,7 +426,7 @@ export default function DataStatusReport() {
         <div className="w-[16px]" />
 
         {loadingState.owners ? (
-          <ComboBoxLoader type={"fishy"} />
+          <ComboBoxLoader type={"simple"} />
         ) : (
           <MyComboBox
             placeholder={"Owner"}
@@ -867,3 +882,16 @@ function compareDatum(datum1, datum2) {
   else if (datum1.id !== datum2.id) return true;
   else return false;
 }
+
+const ExportLoadingToast = () => {
+  const [str, setStr] = useState(".");
+
+  setTimeout(() => {
+    setStr((prev) => {
+      if (prev.length === 4) return "";
+      else return prev + ".";
+    });
+  }, 400);
+
+  return <>{`Preparing export file${str}`}</>;
+};
