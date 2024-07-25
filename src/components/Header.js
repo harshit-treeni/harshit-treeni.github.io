@@ -7,10 +7,11 @@ export default function Header() {
     <div className="sticky top-0 left-0 h-[84px] bg-gray-palette-lightest w-full flex items-center px-[48px] z-[99]">
       <div className="flex-1 h-[48px] rounded-lg flex items-center py-[6px] pr-[6px] pl-[20px] bg-white">
         <input
+          disabled
           className="w-full outline-none text-[14px] placeholder:text-[#4F5771] placeholder:text-[14px]"
           placeholder="Search Dashboard"
         />
-        <div className="rounded-lg bg-gray-palette-lightest h-[36px] px-[12px] flex justify-center items-center">
+        <div className="rounded-lg bg-gray-palette-lightest h-[36px] px-[12px] flex justify-center items-center cursor-not-allowed">
           <SearchIcon className="fill-gray-palette-lightest stroke-white" />
         </div>
       </div>

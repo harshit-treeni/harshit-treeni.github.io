@@ -61,7 +61,7 @@ const headerIcons = {
     `<svg xmlns="http://www.w3.org/2000/svg" fill="#fff" viewBox="0 0 21 21"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.89-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"></path></g></svg>`,
 };
 
-export default function RecordsBlock({ recordsObj, dispatch }) {
+export default function RecordsBlock({ recordsObj, toggleRecordSelect, toggleSelectAll  }) {
   const columns = useMemo(() => {
     return [
       {
@@ -164,61 +164,14 @@ export default function RecordsBlock({ recordsObj, dispatch }) {
       drawCell={drawCell}
       onHeaderClicked={(...args) => {
         if (args[0] === 0) {
-          const newSelectAll = !recordsObj.selectAll;
-          dispatch({
-            type: "recordsObj change",
-            recordsObj: {
-              ...recordsObj,
-              records: recordsObj.records.map((record) => ({
-                ...record,
-                select: newSelectAll,
-              })),
-              selectAll: newSelectAll,
-            },
-          });
+          toggleSelectAll()
         }
       }}
       onCellClicked={(...args) => {
         const [cell] = args;
         const [col, row] = cell;
         if (col === 0) {
-          const newDataArr = [...recordsObj.records];
-          newDataArr[row] = {
-            ...newDataArr[row],
-            select: !newDataArr[row].select,
-          };
-          if (recordsObj.selectAll)
-            dispatch({
-              type: "recordsObj change",
-              recordsObj: {
-                ...recordsObj,
-                records: newDataArr,
-                selectAll: false,
-              },
-            });
-          else {
-            let flag = true;
-            recordsObj.records.forEach((record, index) => {
-              if (index !== row) {
-                if (!record.select) flag = false;
-              }
-            });
-
-            if (!recordsObj.records[row].select && flag)
-              dispatch({
-                type: "recordsObj change",
-                recordsObj: {
-                  ...recordsObj,
-                  records: newDataArr,
-                  selectAll: true,
-                },
-              });
-            else
-              dispatch({
-                type: "recordsObj change",
-                recordsObj: { ...recordsObj, records: newDataArr },
-              });
-          }
+          toggleRecordSelect(row)
         }
       }}
     />

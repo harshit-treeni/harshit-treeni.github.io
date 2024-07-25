@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { FaArrowLeft } from "react-icons/fa6";
 import { CustomGrayDark } from "../colors";
 
@@ -23,6 +24,15 @@ import {
   MdOutlineKeyboardDoubleArrowLeft,
 } from "react-icons/md";
 import { toast } from "react-toastify";
+import {
+  useFetchCategories,
+  useFetchDashboard,
+  useFetchFYStart,
+  useFetchIndicators,
+  useFetchLocations,
+  useFetchOwners,
+  useFetchRecordsObj,
+} from "../hooks/data_fetch_methods";
 
 function DSRReducer(state, action) {
   // eslint-disable-next-line default-case
@@ -31,255 +41,214 @@ function DSRReducer(state, action) {
       return {
         ...state,
         location: action.location,
-        loadingState: {
-          ...state.loadingState,
-          recordsObj: true,
-          categories: true,
-          indicators: true,
-          owners: true,
-        },
+        currPage: 1,
+        status: null,
       };
     case "category change":
       return {
         ...state,
         category: action.category,
-        loadingState: {
-          ...state.loadingState,
-          recordsObj: true,
-          indicators: true,
-          owners: true,
-        },
+        currPage: 1,
+        status: null,
       };
     case "indicator change":
       return {
         ...state,
         indicator: action.indicator,
-        loadingState: {
-          ...state.loadingState,
-          recordsObj: true,
-          owners: true,
-        },
+        currPage: 1,
+        status: null,
       };
     case "owner change":
       return {
         ...state,
         owner: action.owner,
-        loadingState: {
-          ...state.loadingState,
-          recordsObj: true,
-        },
+        currPage: 1,
+        status: null,
+      };
+    case "clear all filters":
+      return {
+        ...state,
+        location: [],
+        category: [],
+        indicator: [],
+        owner: [],
+        currPage: 1,
+        status: null,
+      }
+    case "status change":
+      return {
+        ...state,
+        status: action.status,
+        currPage: 1,
       };
     case "pageOption change":
       return {
         ...state,
         pageOption: action.pageOption,
-        loadingState: {
-          ...state.loadingState,
-          recordsObj: true,
-        },
+        currPage:
+          Math.floor(
+            (state.pageOption.option * (state.currPage - 1) + 1) /
+              action.pageOption.option
+          ) + 1,
       };
     case "FYOption change":
       return {
         ...state,
         FYOption: action.FYOption,
-        loadingState: {
-          ...state.loadingState,
-          recordsObj: true,
-        },
+        currPage: 1,
+        status: null,
       };
-    case "locations change":
+    case "currPage change":
       return {
         ...state,
-        locations: action.locations,
-        loadingState: {
-          ...state.loadingState,
-          locations: false,
-        },
-      };
-    case "categories change":
-      return {
-        ...state,
-        categories: action.categories,
-        loadingState: {
-          ...state.loadingState,
-          categories: false,
-        },
-      };
-    case "indicators change":
-      return {
-        ...state,
-        indicators: action.indicators,
-        loadingState: {
-          ...state.loadingState,
-          indicators: false,
-        },
-      };
-    case "owners change":
-      return {
-        ...state,
-        owners: action.owners,
-        loadingState: {
-          ...state.loadingState,
-          owners: false,
-        },
-      };
-    case "dashboardData change":
-      return {
-        ...state,
-        dashboardData: action.dashboardData,
-      };
-    case "recordsObj change":
-      return {
-        ...state,
-        recordsObj: action.recordsObj,
-        loadingState: {
-          ...state.loadingState,
-          recordsObj: false,
-        },
-      };
-    case "recordsObj loading":
-      return {
-        ...state,
-        loadingState: {
-          ...state.loadingState,
-          recordsObj: true,
-        },
-      };
+        currPage: action.currPage
+      }
   }
   throw Error("Unknown action type " + action.type);
 }
 
+
+const date = new Date();
+const month = date.getMonth();
+const year = date.getFullYear();
+
 export default function DataStatusReport() {
+  const toastID = useRef(null);
+  
+  const [FYStart, isFYStartLoading, fetchFYStart] = useFetchFYStart()
+  const [locations, isLocationsLoading, fetchLocations] = useFetchLocations();
+  const [categories, isCategoriesLoading, fetchCategories] = useFetchCategories();
+  const [indicators, isIndicatorsLoading, fetchIndicators] = useFetchIndicators();
+  const [owners, isOwnersLoading, fetchOwners] = useFetchOwners();
+  // eslint-disable-next-line no-unused-vars
+  const [dashboard, isDashboardLoading, fetchDashboard] = useFetchDashboard();
+  const [recordsObj, isrecordsLoading, fetchRecordsObj, toggleRecordSelect, toggleSelectAll] = useFetchRecordsObj();
+
   const [state, dispatch] = useReducer(DSRReducer, {
-    location: null,
-    category: null,
-    indicator: null,
-    owner: null,
+    location: [],
+    category: [],
+    indicator: [],
+    owner: [],
+    status: null,
+    currPage: 1,
     pageOption: { id: 1, option: 10 },
-    FYOption: { id: 0 },
-    locations: { arr: [] },
-    categories: { arr: [] },
-    indicators: { arr: [] },
-    owners: { arr: [] },
-    dashboardData: [
-      {
-        name: "Approved",
-        number: 225000,
-      },
-      {
-        name: "Pending",
-        number: 205043,
-      },
-      {
-        name: "Rejected",
-        number: 62700,
-      },
-    ],
-    recordsObj: { records: [], selectAll: false },
-    loadingState: {
-      recordsObj: true,
-      locations: true,
-      categories: true,
-      indicators: true,
-      owners: true,
-    },
-  });
+    FYOption: null
+  })
 
   const {
     location,
     category,
     indicator,
     owner,
+    status,
+    currPage,
     pageOption,
-    FYOption,
-    locations,
-    categories,
-    indicators,
-    owners,
-    dashboardData,
-    recordsObj,
-    loadingState,
-  } = state;
+    FYOption
+  } = state
 
-  useEffect(() => {
-    window.parent.postMessage(
-      {
-        type: "sync",
-        data: { location, category, indicator, owner, pageOption, FYOption },
-      },
-      "*"
-    );
-  }, [location, category, indicator, owner, pageOption, FYOption]);
-
-  const onMessageListener = useCallback(
-    (e) => {
-      if (e.data.type === "dsr_fin_start_month") {
-        dispatch({ type: "FYOption change", FYOption: e.data.data });
-      }
-
-      if (e.data.type === "dsr_export_success") {
-        toast.update(toastID.current, {
-          render: "Exported file successfully",
-          type: "success",
-          autoClose: 5000,
-        });
-      }
-
-      if (e.data.type === "dsr_all_data") {
-        if (compareId(locations, e.data.data.locations))
-          dispatch({
-            type: "locations change",
-            locations: e.data.data.locations,
-          });
-
-        if (compareId(categories, e.data.data.categories))
-          dispatch({
-            type: "categories change",
-            categories: e.data.data.categories,
-          });
-
-        if (compareId(indicators, e.data.data.indicators))
-          dispatch({
-            type: "indicators change",
-            indicators: e.data.data.indicators,
-          });
-
-        if (compareId(owners, e.data.data.owners))
-          dispatch({
-            type: "owners change",
-            owners: e.data.data.owners,
-          });
-
-        if (
-          compareDashboardData(
-            getDashboardDataObj(e.data.data.dashboardData),
-            dashboardData
-          )
-        ) {
-          dispatch({
-            type: "dashboardData change",
-            dashboardData: getDashboardDataObj(e.data.data.dashboardData),
-          });
-        }
-
-        if (compareId(recordsObj, e.data.data.recordsObj))
-          dispatch({
-            type: "recordsObj change",
-            recordsObj: {
-              ...e.data.data.recordsObj,
-              records: e.data.data.recordsObj.records.map(mapRecord),
-              selectAll: false,
-            },
-          });
-      }
-    },
-    [locations, categories, indicators, owners, dashboardData, recordsObj]
-  );
+  const onMessageListener = useCallback(e => {
+    if (e.data.type === "dsr_export_success") {
+      toast.update(toastID.current, {
+        render: "Exported file successfully",
+        type: "success",
+        autoClose: 5000,
+      });
+    }
+  }, [])
 
   useEffect(() => {
     window.addEventListener("message", onMessageListener);
     return () => window.removeEventListener("message", onMessageListener);
   }, [onMessageListener]);
+
+
+  useEffect(() => {
+    if(!isFYStartLoading) {
+      if (FYStart.fin_start_month === 4) {
+        dispatch({ type: "FYOption change", FYOption: {
+          id: 1,
+          option: month < 3 ? year : year + 1,
+          FY: month < 3 ? `${year - 1}-${year}` : `${year}-${year + 1}`,
+          startMonth: 4,
+        } })
+      } else {
+        dispatch({ type: "FYOption change", FYOption: {
+          id: 1,
+          option: year,
+          FY: `${year}-${year + 1}`,
+          startMonth: 1,
+        } })
+      }
+    }
+  }, [isFYStartLoading, FYStart])
+
+
+  useEffect(() => {
+    fetchFYStart()
+    fetchLocations();
+  }, []);
+  
+  useEffect(() => {
+    fetchCategories([
+      // ["location", location ? location._id : null]
+    ]);    
+  }, [])
+  // }, [location])
+  
+  useEffect(() => {
+    fetchIndicators([
+      // ["location", location ? location._id : null],
+      // ["category", category ? category._id : null],
+    ]);
+  }, [])
+  // }, [location, category])
+  
+  useEffect(() => {
+    fetchOwners([
+      // ["location", location ? location._id : null],
+      // ["category", category ? category._id : null],
+      // ["indicator", indicator ? indicator._id : null],
+    ]);
+  }, [])
+  // }, [location, category, indicator])
+
+  useEffect(() => {
+    if(FYOption) {
+      fetchDashboard([
+        // ["location", location ? location._id : null],
+        // ["category", category ? category.name : null],
+        // ["indicator", indicator ? indicator.id : null],
+        // ["action_owner_id", owner ? owner.id : null],
+        ["year_filter", FYOption.FY],
+      ])
+    }
+  }, [FYOption])
+  // }, [location, category, indicator, owner, FYOption])
+
+  useEffect(() => {
+    if(FYOption) {
+      fetchRecordsObj({
+        page: currPage,
+        itemsPerPage: pageOption.option,
+        // selectedLocation:
+        //   location === null
+        //     ? null
+        //     : { label: location.name, value: location.id },
+        // Category:
+        //   category === null
+        //     ? null
+        //     : { label: category.name, value: category.id },
+        // selectedIndicator:
+        //   indicator === null
+        //     ? null
+        //     : { label: indicator.name, value: indicator.id },
+        status: status, 
+        // action_owner_id: owner ? owner.id : null,
+        year_filter: FYOption.FY,
+      })
+    }
+  }, [FYOption, pageOption.id, status, currPage])
+  // }, [location, category, indicator, owner, FYOption, pageOption.id, status, currPage])
 
   const [isOpen, setOpen] = useState(false);
 
@@ -299,8 +268,6 @@ export default function DataStatusReport() {
     containerOffset: 16, // give the menu some room to breath relative to the container
     arrowOffset: 16, // let the arrow have some room to breath also
   });
-
-  const toastID = useRef(null);
 
   return (
     <div className="p-[48px] flex flex-col justify-start items-start ">
@@ -341,11 +308,24 @@ export default function DataStatusReport() {
                 <div
                   onClick={() => {
                     console.log("export button clicked");
+
+                    const params = [
+                      ["location", location ? location._id : null],
+                      ["category", category ? category.name : null],
+                      ["indicator", indicator ? indicator.id : null],
+                      ["action_owner_id", owner ? owner.id : null],
+                      ["year_filter", FYOption.FY],
+                      ["status", status],
+                    ];
+                    const paramsStr = getParamStr(params);
+
                     window.parent.postMessage(
-                      { type: "handle_dsr_export" },
+                      { type: "handle_dsr_export", paramsStr },
                       "*"
                     );
+
                     close();
+
                     toastID.current = toast(<ExportLoadingToast />, {
                       type: "info",
                       autoClose: false,
@@ -371,84 +351,92 @@ export default function DataStatusReport() {
 
         <div className="w-[32px]" />
 
-        {loadingState.locations ? (
+        {isLocationsLoading ? (
           <ComboBoxLoader type={"simple"} />
         ) : (
           <MyComboBox
             placeholder={"Location"}
             value={location}
-            onClear={() =>
-              dispatch({ type: "location change", location: null })
+            onClear={() => dispatch({ type: "location change", location: [] })}
+            onChange={(value) =>
+              dispatch({ type: "location change", location: value })
             }
-            onChange={(val) => {
-              if (compareDatum(val, location))
-                dispatch({ type: "location change", location: val });
-            }}
-            options={locations.arr}
+            options={locations}
           />
         )}
         <div className="w-[16px]" />
 
-        {loadingState.categories ? (
+        {isCategoriesLoading ? (
           <ComboBoxLoader type={"simple"} />
         ) : (
           <MyComboBox
             placeholder={"Category"}
             value={category}
-            onClear={() =>
-              dispatch({ type: "category change", category: null })
+            onClear={() => dispatch({ type: "category change", category: [] })}
+            onChange={(value) =>
+              dispatch({ type: "category change", category: value })
             }
-            onChange={(val) => {
-              if (compareDatum(val, category))
-                dispatch({ type: "category change", category: val });
-            }}
-            options={categories.arr}
+            options={categories}
           />
         )}
         <div className="w-[16px]" />
 
-        {loadingState.indicators ? (
+        {isIndicatorsLoading ? (
           <ComboBoxLoader type={"simple"} />
         ) : (
           <MyComboBox
             placeholder={"Indicator"}
             value={indicator}
             onClear={() =>
-              dispatch({ type: "indicator change", indicator: null })
+              dispatch({ type: "indicator change", indicator: [] })
             }
-            onChange={(val) => {
-              if (compareDatum(val, indicator))
-                dispatch({ type: "indicator change", indicator: val });
-            }}
-            options={indicators.arr}
+            onChange={(value) =>
+              dispatch({ type: "indicator change", indicator: value })
+            }
+            options={indicators}
           />
         )}
         <div className="w-[16px]" />
 
-        {loadingState.owners ? (
+        {isOwnersLoading ? (
           <ComboBoxLoader type={"simple"} />
         ) : (
           <MyComboBox
             placeholder={"Owner"}
             value={owner}
-            onClear={() => dispatch({ type: "owner change", owner: null })}
-            onChange={(val) => {
-              if (compareDatum(val, owner)) {
-                dispatch({ type: "owner change", owner: val });
-              }
-            }}
-            options={owners.arr}
+            onClear={() => dispatch({ type: "owner change", owner: [] })}
+            onChange={(value) =>
+              dispatch({ type: "owner change", owner: value })
+            }
+            options={owners}
           />
         )}
+
+        <div className="w-[16px]" />
+        <div
+          onClick={() => dispatch({type: "clear all filters"})}
+          className={clsx(
+            "cursor-pointer rounded-full px-6 py-2 bg-red-400 text-sm/6 text-white font-bold tracking-wide",
+            "hover:bg-red-500",
+          )}
+        >
+          {"Clear All".toUpperCase()}
+        </div>
       </div>
 
       <div className="h-[28px]" />
-      <ColumnGraphBlock data={dashboardData} dispatch={dispatch} />
+      <ColumnGraphBlock
+        rawData={dashboard}
+        setStatus={(value) =>
+          dispatch({ type: "status change", status: value })
+        }
+      />
 
       <div className="h-[28px]" />
       <div className="flex justify-between items-end w-full">
         <div
           onClick={() => {
+            // todo notify admin here .....
             if (recordsObj) {
               if (
                 recordsObj.records.filter((record) => record.select).length ===
@@ -462,26 +450,14 @@ export default function DataStatusReport() {
               ) {
                 window.parent.postMessage(
                   {
-                    type: "notify admin",
-                    data: recordsObj
-                      ? recordsObj.records
-                          .filter((record) => record.select)
-                          .map((record) => record.id)
-                      : null,
+                    type: "dsr_notify_admin",
+                    data: recordsObj.records
+                      .filter((record) => record.select)
+                      .map((record) => record.id),
                   },
                   "*"
                 );
-                dispatch({
-                  type: "recordsObj change",
-                  recordsObj: {
-                    ...recordsObj,
-                    records: recordsObj.records.map((record) => ({
-                      ...record,
-                      select: false,
-                    })),
-                    selectAll: false,
-                  },
-                });
+                toggleSelectAll(false);
               }
             }
           }}
@@ -501,25 +477,33 @@ export default function DataStatusReport() {
             {"Select Financial Year"}
           </div>
           <div className="w-[16px]" />
-          <FYSelect
-            value={FYOption}
-            onChange={(value) => {
-              if (value.id !== FYOption.id)
-                dispatch({ type: "FYOption change", FYOption: value });
-            }}
-          />
+          {FYOption ? (
+            <FYSelect
+              value={FYOption}
+              onChange={(value) => {
+                if (value.id !== FYOption.id)
+                  dispatch({ type: "FYOption change", FYOption: value });
+              }}
+            />
+          ) : null}
         </div>
       </div>
       <div className="h-[42px]" />
       <div className="w-full rounded-[14px] overflow-hidden relative">
-        <RecordsBlock recordsObj={recordsObj} dispatch={dispatch} />
-        {loadingState.recordsObj ? <RecordsLoader /> : null}
+        <RecordsBlock
+          recordsObj={
+            recordsObj === null ? { records: [], selectAll: false } : recordsObj
+          }
+          toggleRecordSelect={toggleRecordSelect}
+          toggleSelectAll={toggleSelectAll}
+        />
+        {isrecordsLoading ? <RecordsLoader /> : null}
       </div>
       <div className="h-[28px]" />
       <div className="flex items-center justify-between w-full">
         <div className="text-gray-500 text-[14px] font-manrope flex items-center">
           <div className="font-[700] text-black">
-            {recordsObj.id
+            {recordsObj
               ? `${
                   recordsObj.totalRecords === 0
                     ? 0
@@ -532,44 +516,37 @@ export default function DataStatusReport() {
               : null}
           </div>
           <div className="w-[6px]" />
-          {recordsObj.id ? `of ${recordsObj.totalRecords}` : null}
+          {recordsObj ? `of ${recordsObj.totalRecords}` : null}
           <div className="w-[56px]" />
           {"Results per page"}
           <div className="w-[28px]" />
           <PageSelect
             value={pageOption}
-            onChange={(val) =>
-              dispatch({ type: "pageOption change", pageOption: val })
-            }
+            onChange={(value) => {
+              if (value.id !== pageOption.id)
+                dispatch({ type: "pageOption change", pageOption: value });
+            }}
           />
         </div>
-        <PaginationBlock recordsObj={recordsObj} dispatch={dispatch} />
+        <PaginationBlock
+          recordsObj={recordsObj}
+          setCurrPage={(pg) =>
+            dispatch({ type: "currPage change", currPage: pg })
+          }
+        />
       </div>
     </div>
   );
 }
 
-function PaginationBlock({ recordsObj, dispatch }) {
-  const handleFirst = () => handlePageClick(1);
-  const handleLast = () => handlePageClick(recordsObj?.totalPages);
+function PaginationBlock({ recordsObj, setCurrPage }) {
+  const handleFirst = () => setCurrPage(1);
+  const handleLast = () => setCurrPage(recordsObj?.totalPages);
+  const handlePageClick = (pg) => setCurrPage(pg)
+  const handleNext = () => setCurrPage(recordsObj.page + 1)
+  const handlePrev = () => setCurrPage(recordsObj.page - 1)
 
-  const handlePageClick = (pg) => {
-    dispatch({ type: "recordsObj loading" });
-    if (recordsObj.page === pg) return;
-    else window.parent.postMessage({ type: "page", data: pg }, "*");
-  };
-
-  const handleNext = () => {
-    dispatch({ type: "recordsObj loading" });
-    window.parent.postMessage({ type: "nextPage" }, "*");
-  };
-
-  const handlePrev = () => {
-    dispatch({ type: "recordsObj loading" });
-    window.parent.postMessage({ type: "prevPage" }, "*");
-  };
-
-  if (!recordsObj.id || recordsObj.totalPages === 1) return null;
+  if (!recordsObj || recordsObj.totalPages === 1) return null;
   else {
     if (recordsObj.totalPages === 2) {
       return (
@@ -596,7 +573,7 @@ function PaginationBlock({ recordsObj, dispatch }) {
         </div>
       );
     } else if (recordsObj.totalPages === 3) {
-      <div className="flex items-center">
+      return <div className="flex items-center">
         {[1, 2, 3].map((pg) => {
           return (
             <div className="flex" key={pg}>
@@ -816,73 +793,6 @@ function PaginationBlock({ recordsObj, dispatch }) {
   }
 }
 
-function mapRecord(record) {
-  return {
-    select: false,
-    category: record.indicator_category ? record.indicator_category : "",
-    indicator: record.indicator_name ? record.indicator_name : "",
-    status: record.state ? getStatus(record.state) : "",
-    startDate: record.start_date ? record.start_date : "",
-    endDate: record.end_date ? record.end_date : "",
-    siteName: record.site ? record.site : "",
-    count: record.record_count.toString() ? record.record_count.toString() : "",
-    owner: record.assigned_to ? record.assigned_to : "",
-    id: record.id,
-  };
-}
-
-function compareId(oldVal, newVal) {
-  if (oldVal.id === undefined) {
-    if (newVal.id !== undefined) return true;
-  } else {
-    if (oldVal.id !== newVal.id) return true;
-  }
-
-  return false;
-}
-
-function compareDashboardData(dashboardDataOne, dashboardDataTwo) {
-  if (dashboardDataOne[0].number !== dashboardDataTwo[0].number) return true;
-  else if (dashboardDataOne[1].number !== dashboardDataTwo[1].number)
-    return true;
-  else if (dashboardDataOne[2].number !== dashboardDataTwo[2].number)
-    return true;
-  else return false;
-}
-
-function getDashboardDataObj(dashboardData) {
-  return [
-    {
-      name: "Approved",
-      number: dashboardData.approved_records,
-    },
-    {
-      name: "Pending",
-      number: dashboardData.pending_records,
-    },
-    {
-      name: "Rejected",
-      number: dashboardData.reject_records,
-    },
-  ];
-}
-
-function getStatus(state) {
-  if (!["Approved", "Under Data Verification"].includes(state)) {
-    return "Pending";
-  } else if (state === "Approved") {
-    return "Approved";
-  } else return "Rejected";
-}
-
-function compareDatum(datum1, datum2) {
-  if (datum1 !== null && datum2 === null) return true;
-  else if (datum1 === null && datum2 !== null) return true;
-  else if (datum1 === null && datum2 === null) return false;
-  else if (datum1.id !== datum2.id) return true;
-  else return false;
-}
-
 const ExportLoadingToast = () => {
   const [str, setStr] = useState(".");
 
@@ -895,3 +805,15 @@ const ExportLoadingToast = () => {
 
   return <>{`Preparing export file${str}`}</>;
 };
+
+const getParamStr = (paramsArr) => {
+  let paramsStr = "";
+  if (paramsArr)
+    paramsArr.forEach((param, index) => {
+      if (param[1]) {
+        paramsStr += `${param[0]}=${param[1]}`;
+        if (paramsArr.length - 1 !== index) paramsStr += "&";
+      }
+    });
+  return paramsStr !== "" ? "?" + paramsStr : paramsStr;
+}

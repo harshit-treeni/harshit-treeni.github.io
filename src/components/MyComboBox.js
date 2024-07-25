@@ -29,15 +29,21 @@ export default function MyComboBox({
         });
 
   return (
-    <div className="w-[140px]">
-      <Combobox value={value} onChange={(value) => onChange(value)}>
+    <div className="w-[200px]">
+      <Combobox 
+        value={value} 
+        onChange={(value) => { 
+          setQuery("")
+          onChange(value) 
+        }}
+        multiple>
         <div className="relative">
           <IoMdCloseCircle
             onClick={onClear}
             className={clsx(
-              "absolute top-[9px] left-[6px] text-[22px] text-red-400 cursor-pointer",
-              { hidden: value === null },
-              { visible: value !== null }
+              "absolute top-[9px] left-[6px] text-[22px] text-red-400 cursor-pointer hover:text-red-500",
+              { hidden: value.length === 0 },
+              { visible: value.length > 0 }
             )}
           />
           <ComboboxInput
@@ -46,11 +52,21 @@ export default function MyComboBox({
               "w-full rounded-full border-none bg-white py-2 pr-8 text-sm/6 text-black",
               "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-black/25",
               "placeholder:text-black/50",
-              { "pl-4": value === null },
-              { "pl-[30px]": value !== null }
+              { "pl-4": value.length === 0 },
+              { "pl-[30px]": value.length > 0 }
             )}
-            displayValue={(value) => value?.name}
-            onChange={(event) => setQuery(event.target.value)}
+            displayValue={(something) => value.length === 0 ? "" : value.map(obj => obj.name).join(", ") + ", "}
+            onChange={(event) => {
+              if(value.length === 0) {
+                return setQuery(event.target.value)
+              }
+
+              if(event.target.value.includes(value.map(obj => obj.name).join(", ") + ", "))
+                setQuery(event.target.value.split(value.map(obj => obj.name).join(", ") + ", ")[1])
+              else {
+                event.target.value = value.map(obj => obj.name).join(", ") + ", "
+              }
+            }}
           />
           <ComboboxButton className="group absolute inset-y-0 right-0 px-2.5">
             <ChevronDownIcon className="size-4 fill-black/60 group-data-[hover]:fill-black" />
@@ -64,7 +80,7 @@ export default function MyComboBox({
         >
           <ComboboxOptions
             anchor="bottom"
-            className="mt-[4px] rounded-xl border-2 border-black/25 bg-white p-1 [--anchor-gap:var(--spacing-1)] empty:hidden "
+            className="mt-[4px] rounded-xl border-2 border-black/25 bg-white p-1 [--anchor-gap:var(--spacing-1)] empty:hidden min-w-[200px] "
           >
             {filteredOptions.map((person) => (
               <ComboboxOption

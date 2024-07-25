@@ -9,7 +9,18 @@ import {
   LabelList,
 } from "recharts";
 
-export default function ColumnGraphBlock({ data, dispatch }) {
+function getDashboardDataObj(dashboardData) {
+  return [
+    { name: "Approved", number: dashboardData.approved_records },
+    { name: "Pending", number: dashboardData.pending_records },
+    { name: "Rejected", number: dashboardData.reject_records },
+  ];
+}
+
+
+export default function ColumnGraphBlock({ rawData, setStatus }) {
+  const data = getDashboardDataObj(rawData)
+
   return (
     <div className="w-full bg-white py-[40px] px-[60px] rounded-[14px]">
       <div className="font-[500] text-[22px]">Data Status Report</div>
@@ -42,23 +53,18 @@ export default function ColumnGraphBlock({ data, dispatch }) {
           <Bar
             barSize={160}
             onClick={(...args) => {
-              dispatch({ type: "recordsObj loading" });
-
-              if (args[1] === 0)
-                window.parent.postMessage(
-                  { type: "status", data: "Approved" },
-                  "*"
-                );
-              if (args[1] === 1)
-                window.parent.postMessage(
-                  { type: "status", data: "Draft" },
-                  "*"
-                );
-              if (args[1] === 2)
-                window.parent.postMessage(
-                  { type: "status", data: "Revise Draft" },
-                  "*"
-                );
+              switch (args[1]) {
+                case 0: 
+                  setStatus("Approved")
+                  break
+                case 1:
+                  setStatus("Pending")
+                  break
+                case 2:
+                  setStatus("Rejected")
+                  break
+                default: throw new Error("Lol this really should not be happening...")
+              }
             }}
             dataKey="number"
             background={{ fill: "#F5F2FF" }}
@@ -96,39 +102,24 @@ export default function ColumnGraphBlock({ data, dispatch }) {
 
       <div className="flex items-center text-black/60">
         <div
-          onClick={() => {
-            dispatch({ type: "recordsObj loading" });
-            window.parent.postMessage(
-              { type: "status", data: "Approved" },
-              "*"
-            );
-          }}
-          className="flex items-center mr-[20px] cursor-pointer"
+          onClick={() => setStatus("Approved")}
+          className="flex items-center mr-[20px] cursor-pointer select-none"
         >
           <div className="bg-[#54CB52] w-[16px] h-[16px] rounded-full mr-[6px] text-[14px]" />
           Approved
         </div>
 
         <div
-          onClick={() => {
-            dispatch({ type: "recordsObj loading" });
-            window.parent.postMessage({ type: "status", data: "Draft" }, "*");
-          }}
-          className="flex items-center mr-[20px] cursor-pointer"
+          onClick={() => setStatus("Pending")}
+          className="flex items-center mr-[20px] cursor-pointer select-none"
         >
           <div className="bg-[#EEC985] w-[16px] h-[16px] rounded-full mr-[6px] text-[14px]" />
           Pending
         </div>
 
         <div
-          onClick={() => {
-            dispatch({ type: "recordsObj loading" });
-            window.parent.postMessage(
-              { type: "status", data: "Revise Draft" },
-              "*"
-            );
-          }}
-          className="flex items-center cursor-pointer"
+          onClick={() => setStatus("Rejected")}
+          className="flex items-center cursor-pointer select-none"
         >
           <div className="bg-[#F98888] w-[16px] h-[16px] rounded-full mr-[6px] text-[14px]" />
           Rejected

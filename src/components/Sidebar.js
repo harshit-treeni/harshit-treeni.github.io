@@ -12,29 +12,34 @@ import BarGraphIcon from "../icons/BarGraphIcon";
 import DocumentIcon from "../icons/DocumentIcon";
 import EditIcon from "../icons/EditIcon";
 import SearchIcon from "../icons/SearchIcon";
+import PeopleIcon from "../icons/PeopleIcon";
 import { GoPeople } from "react-icons/go";
 
-import { useReducer, useRef } from "react";
+import { useEffect, useReducer, useRef } from "react";
 
 import { ReactComponent as Avatar } from "./../avatar.svg";
 import { ReactComponent as WiproLogo } from "./../logos/wipro_logo.svg";
 import { IoHomeOutline } from "react-icons/io5";
 import { useLocation } from "react-router-dom";
 import { GrayPalette } from "../colors";
+import { useFetchModules } from "../hooks/data_fetch_methods";
 
 const dataMngmtNavObjs = [
-  // {
-  //   id: 1,
-  //   Icon: EditIcon,
-  //   label: "Data Analytics",
-  //   path: "/data-management/data-analytics",
-  // },
+  {
+    id: 1,
+    Icon: EditIcon,
+    label: "Data Analytics",
+    path: "/data-management/data-analytics",
+    href: "/analytics#/",
+    modules_key: "analytics"
+  },
   {
     id: 2,
     Icon: BarGraphIcon,
     label: "Data Entry",
     path: "/data-management/data-entry",
     href: "/indicator_data#/",
+    modules_key: "indicator_data"
   },
   {
     id: 3,
@@ -42,41 +47,33 @@ const dataMngmtNavObjs = [
     label: "To-Do-List",
     path: "/data-management/to-do-list",
     href: "/indicator_data#/web_notification_actions?tab=to_do_lists&page=1&limit=10",
+    modules_key: "to_do_list"
   },
-  // {
-  //   id: 4,
-  //   Icon: PeopleIcon,
-  //   label: "SDG's",
-  //   path: "/data-management/sdgs",
-  // },
+  {
+    id: 4,
+    Icon: PeopleIcon,
+    label: "SDG's",
+    path: "/data-management/sdgs",
+    href: "/indicator_data#/sdgs",
+    modules_key: "sdg"
+  },
   {
     id: 5,
     Icon: ElectricityIcon,
     label: "Data Status Report",
     path: "/data-management/data-status-report",
+    modules_key: "data_entry_status"
   },
-  // {
-  //   id: 6,
-  //   Icon: WaterIcon,
-  //   label: "Data Review",
-  //   path: "/data-management/data-review",
-  // },
+  {
+    id: 6,
+    Icon: WaterIcon,
+    label: "Data Review",
+    path: "/data-management/data-review",
+    href: "/indicator_data#/indicator_records_review",
+    modules_key: "everyone"
+  },
 ];
 
-const supChainNavObjs = [
-  {
-    id: 1,
-    Icon: EditIcon,
-    label: "Suppliers",
-    path: "/supply-chain/suppliers",
-  },
-  {
-    id: 2,
-    Icon: BarGraphIcon,
-    label: "Assessments",
-    path: "/supply-chain/assessments",
-  },
-];
 
 const stratNavObjs = [
   {
@@ -107,6 +104,7 @@ const disclosureNavObjs = [
     label: "Publishers",
     path: "/disclosures/publishers",
     href: "/disclosures#/",
+    modules_key: "disclosure_publisher"
   },
   {
     id: 2,
@@ -114,6 +112,7 @@ const disclosureNavObjs = [
     label: "Templates",
     path: "/disclosures/templates",
     href: "/templates#/",
+    modules_key: "disclosure_template"
   },
 ];
 
@@ -226,6 +225,9 @@ function SidebarReducer(state, action) {
 }
 
 export default function Sidebar() {
+  const [modules, isModulesLoading, fetchModules] = useFetchModules() 
+  useEffect(() => fetchModules(), [])
+
   const location = useLocation();
   const [state, dispatch] = useReducer(SidebarReducer, {
     isCollapsed: false,
@@ -239,6 +241,8 @@ export default function Sidebar() {
 
   const { isCollapsed, nav } = state;
 
+  if(isModulesLoading === true) return null
+  
   return (
     <div
       className={clsx("bg-white overflow-y-auto relative h-vh", {
@@ -261,26 +265,27 @@ export default function Sidebar() {
             path="/dashboard"
             href={"/#/"}
           />
-          <CollapsedNavItem
-            Icon={PieChartIcon}
-            label="Data Management"
-            onClick={() => dispatch({ type: "dataMgmt click collapsed" })}
-          />
-          {/* <CollapsedNavItem
-            Icon={SupplyChainIcon}
-            label="Supply Chain"
-            onClick={() => dispatch({ type: "supChain click collapsed" })}
-          /> */}
-          <CollapsedNavItem
-            Icon={TVIcon}
-            label="Strategy"
-            onClick={() => dispatch({ type: "strat click collapsed" })}
-          />
-          <CollapsedNavItem
-            Icon={DocumentIcon}
-            label="Disclosures"
-            onClick={() => dispatch({ type: "disc click collapsed" })}
-          />
+          {modules.module_access.data_management ? (
+            <CollapsedNavItem
+              Icon={PieChartIcon}
+              label="Data Management"
+              onClick={() => dispatch({ type: "dataMgmt click collapsed" })}
+            />
+          ) : null}
+          {modules.module_access.goals ? (
+            <CollapsedNavItem
+              Icon={TVIcon}
+              label="Strategy"
+              onClick={() => dispatch({ type: "strat click collapsed" })}
+            />
+          ) : null}
+          {modules.module_access.disclosure ? (
+            <CollapsedNavItem
+              Icon={DocumentIcon}
+              label="Disclosures"
+              onClick={() => dispatch({ type: "disc click collapsed" })}
+            />
+          ) : null}
         </>
       ) : (
         <>
@@ -290,69 +295,74 @@ export default function Sidebar() {
             path="/dashboard"
             href={"/#/"}
           />
-          <NavItem
-            Icon={PieChartIcon}
-            label="Data Management"
-            onClick={() => dispatch({ type: "dataMgmt click expanded" })}
-          />
-          {nav.dataMgmt
-            ? null
-            : dataMngmtNavObjs.map((obj) => (
-                <NavItem
-                  key={obj.id}
-                  Icon={obj.Icon}
-                  path={obj.path}
-                  label={obj.label}
-                  href={obj.href}
-                />
-              ))}
-          {/* <NavItem
-            Icon={SupplyChainIcon}
-            label="Supply Chain"
-            onClick={() => dispatch({ type: "supChain click expanded" })}
-          />
-          {nav.supChain
-            ? null
-            : supChainNavObjs.map((obj) => (
-                <NavItem
-                  key={obj.id}
-                  Icon={obj.Icon}
-                  path={obj.path}
-                  label={obj.label}
-                />
-              ))} */}
-          <NavItem
-            Icon={TVIcon}
-            label="Strategy"
-            onClick={() => dispatch({ type: "strat click expanded" })}
-          />
-          {nav.strat
-            ? null
-            : stratNavObjs.map((obj) => (
-                <NavItem
-                  key={obj.id}
-                  Icon={obj.Icon}
-                  path={obj.path}
-                  label={obj.label}
-                  href={obj.href}
-                />
-              ))}
-          <NavItem
-            Icon={DocumentIcon}
-            label="Disclosures"
-            onClick={() => dispatch({ type: "disc click expanded" })}
-          />
-          {nav.disc
-            ? null
-            : disclosureNavObjs.map((obj) => (
-                <NavItem
-                  key={obj.id}
-                  Icon={obj.Icon}
-                  path={obj.path}
-                  label={obj.label}
-                  href={obj.href}
-                />
-              ))}
+          {modules.module_access.data_management ? (
+            <>
+              <NavItem
+                Icon={PieChartIcon}
+                label="Data Management"
+                onClick={() => dispatch({ type: "dataMgmt click expanded" })}
+              />
+              {nav.dataMgmt
+                ? null
+                : dataMngmtNavObjs.map((obj) => {
+                    if (modules.module_access.data_management[obj.modules_key])
+                      return (
+                        <NavItem
+                          key={obj.id}
+                          Icon={obj.Icon}
+                          path={obj.path}
+                          label={obj.label}
+                          href={obj.href}
+                        />
+                      );
+                    else return null;
+                  })}
+            </>
+          ) : null}
+          {modules.module_access.goals ? (
+            <>
+              <NavItem
+                Icon={TVIcon}
+                label="Strategy"
+                onClick={() => dispatch({ type: "strat click expanded" })}
+              />
+              {nav.strat
+                ? null
+                : stratNavObjs.map((obj) => (
+                    <NavItem
+                      key={obj.id}
+                      Icon={obj.Icon}
+                      path={obj.path}
+                      label={obj.label}
+                      href={obj.href}
+                    />
+                  ))}
+            </>
+          ) : null}
+          {modules.module_access.disclosure ? (
+            <>
+              <NavItem
+                Icon={DocumentIcon}
+                label="Disclosures"
+                onClick={() => dispatch({ type: "disc click expanded" })}
+              />
+              {nav.disc
+                ? null
+                : disclosureNavObjs.map((obj) => {
+                    if (modules.module_access.disclosure[obj.modules_key])
+                      return (
+                        <NavItem
+                          key={obj.id}
+                          Icon={obj.Icon}
+                          path={obj.path}
+                          label={obj.label}
+                          href={obj.href}
+                        />
+                      );
+                    else return null;
+                  })}
+            </>
+          ) : null}
         </>
       )}
 

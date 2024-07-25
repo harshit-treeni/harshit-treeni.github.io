@@ -50,11 +50,9 @@ const router = createHashRouter([
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <>
-    <React.StrictMode>
-      <DndProvider backend={HTML5Backend}>
-        <RouterProvider router={router} />
-      </DndProvider>
-    </React.StrictMode>
+    <DndProvider backend={HTML5Backend}>
+      <RouterProvider router={router} />
+    </DndProvider>
     <ToastContainer />
   </>
 );
