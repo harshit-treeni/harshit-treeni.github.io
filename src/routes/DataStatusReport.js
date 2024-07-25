@@ -41,6 +41,9 @@ function DSRReducer(state, action) {
       return {
         ...state,
         location: action.location,
+        category: [],
+        indicator: [],
+        owner: [],
         currPage: 1,
         status: null,
       };
@@ -48,6 +51,8 @@ function DSRReducer(state, action) {
       return {
         ...state,
         category: action.category,
+        indicator: [],
+        owner: [],
         currPage: 1,
         status: null,
       };
@@ -55,6 +60,7 @@ function DSRReducer(state, action) {
       return {
         ...state,
         indicator: action.indicator,
+        owner: [],
         currPage: 1,
         status: null,
       };
@@ -186,69 +192,53 @@ export default function DataStatusReport() {
   useEffect(() => {
     fetchFYStart()
     fetchLocations();
-  }, []);
-  
+  }, []);  
+
   useEffect(() => {
-    fetchCategories([
-      // ["location", location ? location._id : null]
-    ]);    
-  }, [])
-  // }, [location])
+    fetchCategories(location.map((locationObj, index) => { return [`location[${index}]`, locationObj.id]}));
+  }, [location])
   
   useEffect(() => {
     fetchIndicators([
-      // ["location", location ? location._id : null],
-      // ["category", category ? category._id : null],
+      ...location.map((locationObj, index) => { return [`location[${index}]`, locationObj.id]}),
+      ...category.map((categoryObj, index) => { return [`category[${index}]`, categoryObj.id]})
     ]);
-  }, [])
-  // }, [location, category])
+  }, [location, category])
   
   useEffect(() => {
     fetchOwners([
-      // ["location", location ? location._id : null],
-      // ["category", category ? category._id : null],
-      // ["indicator", indicator ? indicator._id : null],
+      ...location.map((locationObj, index) => { return [`location[${index}]`, locationObj.id]}),
+      ...category.map((categoryObj, index) => { return [`category[${index}]`, categoryObj.id]}),
+      ...indicator.map((indicatorObj, index) => { return [`indicator[${index}]`, indicatorObj.id]})
     ]);
-  }, [])
-  // }, [location, category, indicator])
+  }, [location, category, indicator])
 
   useEffect(() => {
     if(FYOption) {
       fetchDashboard([
-        // ["location", location ? location._id : null],
-        // ["category", category ? category.name : null],
-        // ["indicator", indicator ? indicator.id : null],
-        // ["action_owner_id", owner ? owner.id : null],
+        ...location.map((locationObj, index) => { return [`location[${index}]`, locationObj.id]}),
+        ...category.map((categoryObj, index) => { return [`category[${index}]`, categoryObj.id]}),
+        ...indicator.map((indicatorObj, index) => { return [`indicator[${index}]`, indicatorObj.id]}),
+        ...owner.map((ownerObj, index) => { return [`action_owner_id[${index}]`, ownerObj.id]}),
         ["year_filter", FYOption.FY],
       ])
     }
-  }, [FYOption])
-  // }, [location, category, indicator, owner, FYOption])
+  }, [location, category, indicator, owner, FYOption])
 
   useEffect(() => {
     if(FYOption) {
       fetchRecordsObj({
         page: currPage,
         itemsPerPage: pageOption.option,
-        // selectedLocation:
-        //   location === null
-        //     ? null
-        //     : { label: location.name, value: location.id },
-        // Category:
-        //   category === null
-        //     ? null
-        //     : { label: category.name, value: category.id },
-        // selectedIndicator:
-        //   indicator === null
-        //     ? null
-        //     : { label: indicator.name, value: indicator.id },
-        status: status, 
-        // action_owner_id: owner ? owner.id : null,
+        location: location.map(loc => loc.id),
+        category: category.map(cat => cat.id),
+        indicator: indicator.map(indicat => indicat.id),
+        status, 
+        action_owner_id: owner.map(owner => owner.id),
         year_filter: FYOption.FY,
       })
     }
-  }, [FYOption, pageOption.id, status, currPage])
-  // }, [location, category, indicator, owner, FYOption, pageOption.id, status, currPage])
+  }, [location, category, indicator, owner, FYOption, pageOption.id, status, currPage])
 
   const [isOpen, setOpen] = useState(false);
 
@@ -310,10 +300,10 @@ export default function DataStatusReport() {
                     console.log("export button clicked");
 
                     const params = [
-                      ["location", location ? location._id : null],
-                      ["category", category ? category.name : null],
-                      ["indicator", indicator ? indicator.id : null],
-                      ["action_owner_id", owner ? owner.id : null],
+                      ...location.map((locationObj, index) => { return [`location[${index}]`, locationObj.id]}),
+                      ...category.map((categoryObj, index) => { return [`category[${index}]`, categoryObj.id]}),
+                      ...indicator.map((indicatorObj, index) => { return [`indicator[${index}]`, indicatorObj.id]}),
+                      ...owner.map((ownerObj, index) => { return [`action_owner_id[${index}]`, ownerObj.id]}),
                       ["year_filter", FYOption.FY],
                       ["status", status],
                     ];
