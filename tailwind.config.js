@@ -5,6 +5,7 @@ module.exports = {
     fontFamily: {
       sans: ["Inter", "ui-sans-serif", "system-ui"],
       manrope: "Manrope",
+      roboto: ['Roboto', 'sans-serif'],
     },
     extend: {
       colors: {

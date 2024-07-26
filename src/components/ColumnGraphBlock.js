@@ -22,11 +22,7 @@ export default function ColumnGraphBlock({ rawData, setStatus }) {
   const data = getDashboardDataObj(rawData)
 
   return (
-    <div className="w-full bg-white py-[40px] px-[60px] rounded-[14px]">
-      <div className="font-[500] text-[22px]">Data Status Report</div>
-
-      <div className="h-[42px]" />
-
+    <div className="w-full bg-white pb-[40px] pt-[60px] px-[60px] rounded-[14px]">
       <ResponsiveContainer width="98%" height={200} className={"mx-auto"}>
         <BarChart data={data}>
           <XAxis

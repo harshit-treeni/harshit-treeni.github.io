@@ -29,7 +29,7 @@ export default function MyComboBox({
         });
 
   return (
-    <div className="w-[200px]">
+    <div className="flex-auto">
       <Combobox 
         value={value} 
         onChange={(value) => { 

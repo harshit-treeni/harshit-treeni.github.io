@@ -4,6 +4,8 @@ import "./index.css";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { ToastContainer } from "react-toastify";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs"
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider"
 
 import { RouterProvider, createHashRouter } from "react-router-dom";
 import ErrorPage from "./ErrorPage";
@@ -50,9 +52,11 @@ const router = createHashRouter([
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <>
-    <DndProvider backend={HTML5Backend}>
-      <RouterProvider router={router} />
-    </DndProvider>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <DndProvider backend={HTML5Backend}>
+        <RouterProvider router={router} />
+      </DndProvider>
+    </LocalizationProvider>
     <ToastContainer />
   </>
 );

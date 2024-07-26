@@ -9,6 +9,7 @@ import RecordsBlock from "../components/RecordsBlock";
 import PageSelect from "../components/PageSelect";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { BiExport } from "react-icons/bi";
+import { LuArrowBigRightDash } from "react-icons/lu";
 import MyComboBox from "../components/MyComboBox";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import clsx from "clsx";
@@ -33,10 +34,22 @@ import {
   useFetchOwners,
   useFetchRecordsObj,
 } from "../hooks/data_fetch_methods";
+import MyDatePicker from "../components/MyDatePicker";
+
 
 function DSRReducer(state, action) {
   // eslint-disable-next-line default-case
   switch (action.type) {
+    case "fromDate change":
+      return {
+        ...state,
+        fromDate: action.fromDate
+      }
+    case "toDate change":
+      return {
+        ...state,
+        toDate: action.toDate
+      }
     case "location change":
       return {
         ...state,
@@ -131,6 +144,8 @@ export default function DataStatusReport() {
   const [recordsObj, isrecordsLoading, fetchRecordsObj, toggleRecordSelect, toggleSelectAll] = useFetchRecordsObj();
 
   const [state, dispatch] = useReducer(DSRReducer, {
+    fromDate: null,
+    toDate: null,
     location: [],
     category: [],
     indicator: [],
@@ -142,6 +157,8 @@ export default function DataStatusReport() {
   })
 
   const {
+    fromDate,
+    toDate,
     location,
     category,
     indicator,
@@ -221,9 +238,11 @@ export default function DataStatusReport() {
         ...indicator.map((indicatorObj, index) => { return [`indicator[${index}]`, indicatorObj.id]}),
         ...owner.map((ownerObj, index) => { return [`action_owner_id[${index}]`, ownerObj.id]}),
         ["year_filter", FYOption.FY],
+        ["from_date", fromDate?.format("YYYY-MM-DD")],
+        ["to_date", toDate?.format("YYYY-MM-DD")],
       ])
     }
-  }, [location, category, indicator, owner, FYOption])
+  }, [location, category, indicator, owner, FYOption, fromDate, toDate])
 
   useEffect(() => {
     if(FYOption) {
@@ -236,9 +255,11 @@ export default function DataStatusReport() {
         status, 
         action_owner_id: owner.map(owner => owner.id),
         year_filter: FYOption.FY,
+        from_date: fromDate?.format("YYYY-MM-DD"),
+        to_date: toDate?.format("YYYY-MM-DD")
       })
     }
-  }, [location, category, indicator, owner, FYOption, pageOption.id, status, currPage])
+  }, [location, category, indicator, owner, FYOption, fromDate, toDate, pageOption.id, status, currPage])
 
   const [isOpen, setOpen] = useState(false);
 
@@ -280,8 +301,8 @@ export default function DataStatusReport() {
 
         <div className="w-[24px]" />
 
-        <div className="flex-1 leading-[40px] font-[600] text-[27px]">
-          {"Data Management / Data Status Report"}
+        <div className="flex-1 leading-[40px] font-[600] text-[27px] font-roboto">
+          {"Data Status Dashboard"}
         </div>
 
         <div
@@ -305,6 +326,8 @@ export default function DataStatusReport() {
                       ...indicator.map((indicatorObj, index) => { return [`indicator[${index}]`, indicatorObj.id]}),
                       ...owner.map((ownerObj, index) => { return [`action_owner_id[${index}]`, ownerObj.id]}),
                       ["year_filter", FYOption.FY],
+                      ["from_date", fromDate?.format("YYYY-MM-DD")],
+                      ["to_date", toDate?.format("YYYY-MM-DD")],
                       ["status", status],
                     ];
                     const paramsStr = getParamStr(params);
@@ -334,83 +357,99 @@ export default function DataStatusReport() {
       </div>
 
       <div className="h-[28px]" />
-      <div className="rounded-[8px] py-[14px] px-[24px] border-[0.5px] border-[#CDCDFF] flex items-center w-full">
-        <div className="font-manrope font-[600] text-[16px] leading-[20px]">
-          Select one or multiple filters
+      <div className="rounded-[8px] py-[14px] px-[24px] border-[0.5px] border-[#CDCDFF] flex justify-between items-center w-full">
+        <div className="flex items-center">
+          <MyDatePicker 
+            maxDate={toDate}
+            date={fromDate} 
+            onClear={() => dispatch({type: "fromDate change", fromDate: null})}
+            onChange={(newValue) => dispatch({type: "fromDate change", fromDate: newValue})}/>
+
+          <div className="w-[4px]" />
+          <LuArrowBigRightDash className="text-[24px] text-black/35" />
+          <div className="w-[4px]" />
+          
+          <MyDatePicker 
+            minDate={fromDate}
+            date={toDate} 
+            onClear={() => dispatch({type: "toDate change", toDate: null})}
+            onChange={(newValue) => dispatch({type: "toDate change", toDate: newValue})}/>
+
+          <div className="w-[16px]" />          
+
+          {isLocationsLoading ? (
+            <ComboBoxLoader type={"simple"} />
+          ) : (
+            <MyComboBox
+              placeholder={"Location"}
+              value={location}
+              onClear={() => dispatch({ type: "location change", location: [] })}
+              onChange={(value) =>
+                dispatch({ type: "location change", location: value })
+              }
+              options={locations}
+            />
+          )}
+          <div className="w-[16px]" />
+
+          {isCategoriesLoading ? (
+            <ComboBoxLoader type={"simple"} />
+          ) : (
+            <MyComboBox
+              placeholder={"Category"}
+              value={category}
+              onClear={() => dispatch({ type: "category change", category: [] })}
+              onChange={(value) =>
+                dispatch({ type: "category change", category: value })
+              }
+              options={categories}
+            />
+          )}
+          <div className="w-[16px]" />
+
+          {isIndicatorsLoading ? (
+            <ComboBoxLoader type={"simple"} />
+          ) : (
+            <MyComboBox
+              placeholder={"Indicator"}
+              value={indicator}
+              onClear={() =>
+                dispatch({ type: "indicator change", indicator: [] })
+              }
+              onChange={(value) =>
+                dispatch({ type: "indicator change", indicator: value })
+              }
+              options={indicators}
+            />
+          )}
+          <div className="w-[16px]" />
+
+          {isOwnersLoading ? (
+            <ComboBoxLoader type={"simple"} />
+          ) : (
+            <MyComboBox
+              placeholder={"Owner"}
+              value={owner}
+              onClear={() => dispatch({ type: "owner change", owner: [] })}
+              onChange={(value) =>
+                dispatch({ type: "owner change", owner: value })
+              }
+              options={owners}
+            />
+          )}
         </div>
 
-        <div className="w-[32px]" />
-
-        {isLocationsLoading ? (
-          <ComboBoxLoader type={"simple"} />
-        ) : (
-          <MyComboBox
-            placeholder={"Location"}
-            value={location}
-            onClear={() => dispatch({ type: "location change", location: [] })}
-            onChange={(value) =>
-              dispatch({ type: "location change", location: value })
-            }
-            options={locations}
-          />
-        )}
-        <div className="w-[16px]" />
-
-        {isCategoriesLoading ? (
-          <ComboBoxLoader type={"simple"} />
-        ) : (
-          <MyComboBox
-            placeholder={"Category"}
-            value={category}
-            onClear={() => dispatch({ type: "category change", category: [] })}
-            onChange={(value) =>
-              dispatch({ type: "category change", category: value })
-            }
-            options={categories}
-          />
-        )}
-        <div className="w-[16px]" />
-
-        {isIndicatorsLoading ? (
-          <ComboBoxLoader type={"simple"} />
-        ) : (
-          <MyComboBox
-            placeholder={"Indicator"}
-            value={indicator}
-            onClear={() =>
-              dispatch({ type: "indicator change", indicator: [] })
-            }
-            onChange={(value) =>
-              dispatch({ type: "indicator change", indicator: value })
-            }
-            options={indicators}
-          />
-        )}
-        <div className="w-[16px]" />
-
-        {isOwnersLoading ? (
-          <ComboBoxLoader type={"simple"} />
-        ) : (
-          <MyComboBox
-            placeholder={"Owner"}
-            value={owner}
-            onClear={() => dispatch({ type: "owner change", owner: [] })}
-            onChange={(value) =>
-              dispatch({ type: "owner change", owner: value })
-            }
-            options={owners}
-          />
-        )}
-
-        <div className="w-[16px]" />
-        <div
-          onClick={() => dispatch({type: "clear all filters"})}
-          className={clsx(
-            "cursor-pointer rounded-full px-6 py-2 bg-red-400 text-sm/6 text-white font-bold tracking-wide",
-            "hover:bg-red-500",
-          )}
-        >
-          {"Clear All".toUpperCase()}
+        <div className="flex items-center">
+          <div className="w-[16px]" />
+          <div
+            onClick={() => dispatch({type: "clear all filters"})}
+            className={clsx(
+              "cursor-pointer rounded-full px-4 py-2 bg-red-400 text-sm/6 text-white tracking-wide whitespace-nowrap w-[78.5833px]",
+              "hover:bg-red-500",
+            )}
+          >
+            {"Clear".toUpperCase()}
+          </div>
         </div>
       </div>
 

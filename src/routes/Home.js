@@ -1,6 +1,7 @@
 import { AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { Arrow, useLayer } from "react-laag";
+import MyDatePicker from "../components/MyDatePicker";
 
 export default function Home() {
   const [isOpen, setOpen] = useState(false);
@@ -22,10 +23,12 @@ export default function Home() {
     arrowOffset: 16, // let the arrow have some room to breath also
   });
 
+  const [selectedDate, setSelectedDate] = useState(null)
+  
   return (
     <>
       <div className="p-[48px] flex justify-between">
-        Home
+        Home M4
         <div
           {...triggerProps}
           onClick={() => setOpen(!isOpen)}
@@ -41,6 +44,13 @@ export default function Home() {
             )}
           </AnimatePresence>
         )}
+      </div>
+
+      <div className="p-[48px]">
+        <MyDatePicker 
+          value={selectedDate} 
+          onChange={setSelectedDate}
+          onClear={() => setSelectedDate(null)} />
       </div>
     </>
   );

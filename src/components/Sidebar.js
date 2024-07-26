@@ -60,7 +60,7 @@ const dataMngmtNavObjs = [
   {
     id: 5,
     Icon: ElectricityIcon,
-    label: "Data Status Report",
+    label: "Data Status Dashboard",
     path: "/data-management/data-status-report",
     modules_key: "data_entry_status"
   },
