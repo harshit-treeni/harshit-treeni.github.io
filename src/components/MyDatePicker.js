@@ -9,7 +9,7 @@ export default function MyDatePicker({ date, onChange, onClear, minDate, maxDate
       borderRadius: '9999px',
       padding: date ? '0px 18px 0px 18px' : '0px 18px 0px 0px',
       fontSize: date !== null ? '16px' : '0.875rem',
-      width: '170px',
+      width: '164px',
       height: '40px',
       backgroundColor: 'white',
       '&:focus': {
