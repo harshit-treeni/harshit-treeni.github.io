@@ -48,7 +48,7 @@ export default function Home() {
 
       <div className="p-[48px]">
         <MyDatePicker 
-          value={selectedDate} 
+          date={selectedDate} 
           onChange={setSelectedDate}
           onClear={() => setSelectedDate(null)} />
       </div>

@@ -4,6 +4,7 @@ import "@glideapps/glide-data-grid/dist/index.css";
 import { BiSearchAlt } from "react-icons/bi";
 import { useLayer } from "react-laag";
 import Select from "react-select";
+import { useFetchSuppliers } from "../hooks/data_fetch_suppliers";
 
 const teal = {
   primaryColor: "#009688", // Teal
@@ -47,31 +48,12 @@ const columns = [
 ];
 
 export default function SuppliersPage() {
-  const [locations, setLocations] = useState(null);
-  const [data, setData] = useState([]);
-
-  const onMessageListener = useCallback((e) => {
-    if (e.data.type === "data") {
-      if (e.data.data.suppliers)
-        setData(
-          e.data.data.suppliers.map((supplierObj) => ({
-            email: supplierObj.email,
-            supplier: supplierObj.email,
-            locations: supplierObj.locations,
-            person: supplierObj.name,
-            address: "address",
-          }))
-        );
-
-      if (e.data.data.locations) setLocations(e.data.data.locations);
-    }
-  }, []);
-
+  const [suppliers, isSuppliersLoading, fetchSuppliers] = useFetchSuppliers()
   useEffect(() => {
-    window.addEventListener("message", onMessageListener);
-    return () => window.removeEventListener("message", onMessageListener);
-  }, [onMessageListener]);
+    fetchSuppliers()
+  }, [])
 
+  const [data, setData] = useState([]);
   const [gridSelection, setGridSelection] = useState();
   const gridRef = useRef(null);
 

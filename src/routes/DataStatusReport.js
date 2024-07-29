@@ -30,10 +30,12 @@ import {
   useFetchDashboard,
   useFetchFYStart,
   useFetchIndicators,
-  useFetchLocations,
   useFetchOwners,
   useFetchRecordsObj,
-} from "../hooks/data_fetch_methods";
+} from "../hooks/data_fetch_dsr";
+import {
+  useFetchLocations
+} from "../hooks/data_fetch_methods"
 import MyDatePicker from "../components/MyDatePicker";
 
 
