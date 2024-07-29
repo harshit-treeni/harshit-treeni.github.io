@@ -43,12 +43,16 @@ function DSRReducer(state, action) {
     case "fromDate change":
       return {
         ...state,
-        fromDate: action.fromDate
+        fromDate: action.fromDate,
+        currPage: 1,
+        status: null,
       }
     case "toDate change":
       return {
         ...state,
-        toDate: action.toDate
+        toDate: action.toDate,
+        currPage: 1,
+        status: null,
       }
     case "location change":
       return {
@@ -87,6 +91,8 @@ function DSRReducer(state, action) {
     case "clear all filters":
       return {
         ...state,
+        fromDate: null,
+        toDate: null,
         location: [],
         category: [],
         indicator: [],
@@ -113,6 +119,8 @@ function DSRReducer(state, action) {
     case "FYOption change":
       return {
         ...state,
+        fromDate: null,
+        toDate: null,
         FYOption: action.FYOption,
         currPage: 1,
         status: null,
