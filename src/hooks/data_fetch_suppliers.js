@@ -6,6 +6,6 @@ export const useFetchSuppliers = () => {
     []
   );
 
-  const fetchSuppliers = (params) => dataFetchGet("suppliers/suppliers.json", params);
+  const fetchSuppliers = (params) => dataFetchGet("suppliers/fetch_suppliers", params);
   return [data, isLoading, fetchSuppliers];
 };

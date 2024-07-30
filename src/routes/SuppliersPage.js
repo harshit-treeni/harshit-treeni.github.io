@@ -1,10 +1,13 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import DataEditor, { GridCellKind } from "@glideapps/glide-data-grid";
 import "@glideapps/glide-data-grid/dist/index.css";
 import { BiSearchAlt } from "react-icons/bi";
 import { useLayer } from "react-laag";
-import Select from "react-select";
 import { useFetchSuppliers } from "../hooks/data_fetch_suppliers";
+import { useFetchLocations } from "../hooks/data_fetch_methods";
+
+import MyComboBox from "./../components/MyComboBox"
 
 const teal = {
   primaryColor: "#009688", // Teal
@@ -40,22 +43,32 @@ const customTheme = {
 };
 
 const columns = [
-  { title: "Supplier Name", id: "supplier", grow: 1 },
-  { title: "Locations", id: "locations", grow: 1 },
-  { title: "Contact Person", id: "person", grow: 1 },
-  { title: "Email", id: "email", grow: 1 },
-  { title: "Address", id: "address", grow: 1 },
+  { title: "Supplier Name", id: "supplier_name", grow: 1 },
+  { title: "Locations", id: "supplies_to_locations", grow: 3 },
+  { title: "Contact Person", id: "contact_person_name", grow: 1 },
+  { title: "Email", id: "contact_person_email", grow: 1 },
+  { title: "Address", id: "supplier_address", grow: 1 },
 ];
 
 export default function SuppliersPage() {
+  const [data, setData] = useState([]);
+  // const [gridSelection, setGridSelection] = useState();
+  const gridRef = useRef(null);
+
   const [suppliers, isSuppliersLoading, fetchSuppliers] = useFetchSuppliers()
+  const [locations, isLoactionsLoading, fetchLocations] = useFetchLocations()
+  
+  useEffect(() => {
+    if(!isSuppliersLoading) {
+      setData(suppliers)
+    }
+  }, [isSuppliersLoading])
+
   useEffect(() => {
     fetchSuppliers()
+    fetchLocations()
   }, [])
 
-  const [data, setData] = useState([]);
-  const [gridSelection, setGridSelection] = useState();
-  const gridRef = useRef(null);
 
   const getCellContent = useCallback(
     (cell) => {
@@ -69,9 +82,9 @@ export default function SuppliersPage() {
           kind: GridCellKind.Text,
           allowOverlay: false,
           readonly: true,
-          displayData: cellData?.join(",") || "",
+          displayData: cellData.map(obj => obj.name).join(", "),
           data: cellData,
-          themeOverride: [undefined, "", null].includes(cellData)
+          themeOverride: cellData.length === 0
             ? {
                 ...customTheme,
                 bgCell: "#FF000026",
@@ -106,7 +119,7 @@ export default function SuppliersPage() {
   const onCellEdited = useCallback(
     (cell, newValue) => {
       const [col, row] = cell;
-      const dataKey = Object.keys(data[row])[col];
+      const dataKey = columns.map((obj) => obj.id)[col];
 
       setData((prevData) => {
         const newData = [...prevData];
@@ -117,57 +130,57 @@ export default function SuppliersPage() {
     [data]
   );
 
-  const copySelection = useCallback(() => {
-    if (gridSelection?.current === undefined) return "";
+  // const copySelection = useCallback(() => {
+  //   if (gridSelection?.current === undefined) return "";
 
-    const { x, y, width, height } = gridSelection.current.range;
-    let result = "";
+  //   const { x, y, width, height } = gridSelection.current.range;
+  //   let result = "";
 
-    for (let row = y; row < y + height; row++) {
-      for (let col = 0; col < x; col++) result += "\t";
-      for (let col = x; col < x + width; col++) {
-        const cell = getCellContent([col, row]);
-        result += cell.data;
-        if (col < x + width - 1) result += "\t";
-      }
-      for (let col = x + width; col < 5; col++) result += "\t";
-      if (row < y + height - 1) result += "\n";
-    }
+  //   for (let row = y; row < y + height; row++) {
+  //     for (let col = 0; col < x; col++) result += "\t";
+  //     for (let col = x; col < x + width; col++) {
+  //       const cell = getCellContent([col, row]);
+  //       result += cell.data;
+  //       if (col < x + width - 1) result += "\t";
+  //     }
+  //     for (let col = x + width; col < 5; col++) result += "\t";
+  //     if (row < y + height - 1) result += "\n";
+  //   }
 
-    return result;
-  }, [gridSelection, getCellContent]);
+  //   return result;
+  // }, [gridSelection, getCellContent]);
 
-  const pasteData = useCallback((pasteString) => {
-    const rows = pasteString.split("\n");
-    const newData = rows.map((row) => {
-      const cells = row.split("\t");
-      return {
-        supplier: cells[0],
-        locations: cells[1],
-        person: cells[2],
-        email: cells[3],
-        address: cells[4],
-      };
-    });
+  // const pasteData = useCallback((pasteString) => {
+  //   const rows = pasteString.split("\n");
+  //   const newData = rows.map((row) => {
+  //     const cells = row.split("\t");
+  //     return {
+  //       supplier: cells[0],
+  //       locations: cells[1],
+  //       person: cells[2],
+  //       email: cells[3],
+  //       address: cells[4],
+  //     };
+  //   });
 
-    setData((prevData) => [...newData, ...prevData]);
-  }, []);
+  //   setData((prevData) => [...newData, ...prevData]);
+  // }, []);
 
-  const onKeyDown = useCallback(
-    (e) => {
-      if (e.key === "c" && (e.ctrlKey || e.metaKey)) {
-        const copyText = copySelection();
-        navigator.clipboard.writeText(copyText).then(() => {
-          console.log("Copied to clipboard");
-        });
-      } else if (e.key === "v" && (e.ctrlKey || e.metaKey)) {
-        navigator.clipboard.readText().then((pasteText) => {
-          pasteData(pasteText);
-        });
-      }
-    },
-    [copySelection, pasteData]
-  );
+  // const onKeyDown = useCallback(
+  //   (e) => {
+  //     if (e.key === "c" && (e.ctrlKey || e.metaKey)) {
+  //       const copyText = copySelection();
+  //       navigator.clipboard.writeText(copyText).then(() => {
+  //         console.log("Copied to clipboard");
+  //       });
+  //     } else if (e.key === "v" && (e.ctrlKey || e.metaKey)) {
+  //       navigator.clipboard.readText().then((pasteText) => {
+  //         pasteData(pasteText);
+  //       });
+  //     }
+  //   },
+  //   [copySelection, pasteData]
+  // );
 
   const getRowThemeOverride = useCallback((row) => {
     return {
@@ -180,15 +193,17 @@ export default function SuppliersPage() {
   const { layerProps, renderLayer } = useLayer({
     isOpen,
     auto: true,
-    placement: "bottom-end",
+    placement: "bottom-start",
     triggerOffset: 2,
     onOutsideClick: (...args) => {
+      if(document.getElementById("headlessui-portal-root"))
+        return 
+      
       if (menu?.first === true) {
-        console.log("first");
         setMenu({ ...menu, first: false });
       } else {
         setMenu(undefined);
-      }
+      }      
     },
     trigger: {
       getBounds: () => ({
@@ -229,11 +244,11 @@ export default function SuppliersPage() {
             onClick={() => {
               setData([
                 {
-                  supplier: "",
-                  locations: "",
-                  person: "",
-                  email: "",
-                  address: "",
+                  supplier_name: "",
+                  supplies_to_locations: [],
+                  contact_person_name: "",
+                  contact_person_email: "",
+                  supplier_address: "",
                 },
                 ...data,
               ]);
@@ -252,7 +267,7 @@ export default function SuppliersPage() {
       <div className="h-[36px]" />
       <div
         className="w-[100%] h-[calc(100vh-380px)] rounded-xl overflow-clip mx-auto bg-white"
-        onKeyDown={onKeyDown}
+        // onKeyDown={onKeyDown}
         tabIndex={0}
       >
         <DataEditor
@@ -262,8 +277,8 @@ export default function SuppliersPage() {
           rows={data.length}
           getCellContent={getCellContent}
           onCellEdited={onCellEdited}
-          gridSelection={gridSelection}
-          onGridSelectionChange={setGridSelection}
+          // gridSelection={gridSelection}
+          // onGridSelectionChange={setGridSelection}
           height={"100%"}
           width={"100%"}
           theme={customTheme}
@@ -275,21 +290,25 @@ export default function SuppliersPage() {
         {isOpen &&
           renderLayer(
             <div
-              className="bg-white p-3 rounded-xl border border-black/[0.1] shadow-md"
+              className="shadow-l rounded-full border-[2px] border-black/25"
               {...layerProps}
             >
-              <Select
-                defaultValue={[{ value: "chocolate", label: "Chocolate" }]}
-                isMulti
-                options={[
-                  { value: "chocolate", label: "Chocolate" },
-                  { value: "strawberry", label: "Strawberry" },
-                  { value: "vanilla", label: "Vanilla" },
-                ]}
-                onChange={(...args) => {
-                  console.log(args);
-                }}
-              />
+              <MyComboBox 
+                forDataGrid={true}
+                placeholder={"Choose Locations"}
+                options={locations} 
+                value={data[menu.cell[1]].supplies_to_locations} 
+                onChange={(newValue) => {
+                  setData(prev => {
+                    const newData = [...prev]
+                    const row = menu.cell[1]
+                    newData[row] = {
+                      ...newData[row],
+                      supplies_to_locations: newValue
+                    }
+                    return newData
+                  })
+                }} />
             </div>
           )}
       </div>

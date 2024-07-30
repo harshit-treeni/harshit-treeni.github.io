@@ -13,6 +13,7 @@ import { useState } from "react";
 import { IoMdCloseCircle } from "react-icons/io";
 
 export default function MyComboBox({
+  forDataGrid = false,
   placeholder,
   value,
   onChange,
@@ -42,18 +43,18 @@ export default function MyComboBox({
             onClick={onClear}
             className={clsx(
               "absolute top-[9px] left-[6px] text-[22px] text-red-400 cursor-pointer hover:text-red-500",
-              { hidden: value.length === 0 },
-              { visible: value.length > 0 }
+              { hidden: value.length === 0 || forDataGrid },
+              { visible: value.length > 0 && !forDataGrid }
             )}
           />
           <ComboboxInput
             placeholder={placeholder}
             className={clsx(
-              "w-full rounded-full border-none bg-white py-2 pr-8 text-sm/6 text-black",
-              "focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-black/25",
+              "focus:outline-none w-full rounded-full border-none bg-white py-2 pr-8 text-sm/6 text-black",
+              { "data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-black/25" : !forDataGrid },
               "placeholder:text-black/50",
-              { "pl-4": value.length === 0 },
-              { "pl-[30px]": value.length > 0 }
+              { "pl-4": value.length === 0 || forDataGrid },
+              { "pl-[30px]": value.length > 0 && !forDataGrid }
             )}
             displayValue={(something) => value.length === 0 ? "" : value.map(obj => obj.name).join(", ") + ", "}
             onChange={(event) => {
@@ -80,7 +81,7 @@ export default function MyComboBox({
         >
           <ComboboxOptions
             anchor="bottom"
-            className="mt-[4px] rounded-xl border-2 border-black/25 bg-white p-1 [--anchor-gap:var(--spacing-1)] empty:hidden min-w-[200px] "
+            className="combo_box__options mt-[4px] rounded-xl border-2 border-black/25 bg-white p-1 [--anchor-gap:var(--spacing-1)] empty:hidden min-w-[200px] "
           >
             {filteredOptions.map((person) => (
               <ComboboxOption
