@@ -88,3 +88,13 @@ export const useFetchLocations = () => {
   const fetchLocations = (params) => dataFetchGet("goals/org_nodes.json", params);
   return [data, isLoading, fetchLocations];
 };
+
+export const useFetchOrgNodes = () => {
+  const [data, isLoading, dataFetchGet] = useDataFetchGet(
+    "org_nodes",
+    []
+  );
+
+  const fetchOrgNodes = (params) => dataFetchGet("org_nodes.json", params);
+  return [data, isLoading, fetchOrgNodes];
+}

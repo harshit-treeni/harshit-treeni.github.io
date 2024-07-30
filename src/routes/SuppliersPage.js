@@ -4,10 +4,11 @@ import DataEditor, { GridCellKind } from "@glideapps/glide-data-grid";
 import "@glideapps/glide-data-grid/dist/index.css";
 import { BiSearchAlt } from "react-icons/bi";
 import { useLayer } from "react-laag";
-import { useFetchSuppliers } from "../hooks/data_fetch_suppliers";
-import { useFetchLocations } from "../hooks/data_fetch_methods";
+import { useFetchSuppliers, useUpdateSuppliers } from "../hooks/data_fetch_suppliers";
+import { useFetchOrgNodes } from "../hooks/data_fetch_methods";
 
 import MyComboBox from "./../components/MyComboBox"
+import RecordsLoader from "../components/RecordsLoader";
 
 const teal = {
   primaryColor: "#009688", // Teal
@@ -55,19 +56,26 @@ export default function SuppliersPage() {
   // const [gridSelection, setGridSelection] = useState();
   const gridRef = useRef(null);
 
+  const [orgNodes, isOrgNodesLoading, fetchOrgNodes] = useFetchOrgNodes()
   const [suppliers, isSuppliersLoading, fetchSuppliers] = useFetchSuppliers()
-  const [locations, isLoactionsLoading, fetchLocations] = useFetchLocations()
+  const [updateSuppliersResponse, isSuppliersUpdating, updateSuppliers] = useUpdateSuppliers()
   
+  useEffect(() => {
+    fetchOrgNodes()
+  }, [])
+
+  useEffect(() => {
+    if(!isSuppliersUpdating) {
+      fetchSuppliers()
+    }
+  }, [isSuppliersUpdating])
+
   useEffect(() => {
     if(!isSuppliersLoading) {
       setData(suppliers)
     }
   }, [isSuppliersLoading])
 
-  useEffect(() => {
-    fetchSuppliers()
-    fetchLocations()
-  }, [])
 
 
   const getCellContent = useCallback(
@@ -99,7 +107,7 @@ export default function SuppliersPage() {
       return {
         kind: GridCellKind.Text,
         allowOverlay: true,
-        readonly: false,
+        readonly: col === 3 ? true : false,
         displayData: cellData?.toString() || "",
         data: cellData,
         themeOverride: [undefined, "", null].includes(cellData)
@@ -123,6 +131,39 @@ export default function SuppliersPage() {
 
       setData((prevData) => {
         const newData = [...prevData];
+        if(col === 0) {
+          newData[row] = { 
+            ...newData[row], 
+            [dataKey]: newValue.data, 
+            supplier_edit_data: {
+              ...newData[row].supplier_edit_data,
+              name: newValue.data
+            }
+          };
+        } else if(col === 2) {
+          newData[row] = { 
+            ...newData[row], 
+            [dataKey]: newValue.data, 
+            supplier_edit_data: {
+              ...newData[row].supplier_edit_data,
+              supplier_user: {
+                ...newData[row].supplier_edit_data.supplier_user,
+                name: newValue.data
+              }
+            }
+          };
+        } else {
+          // col should be equal to 4
+          newData[row] = { 
+            ...newData[row], 
+            [dataKey]: newValue.data, 
+            supplier_edit_data: {
+              ...newData[row].supplier_edit_data,
+              address: newValue.data
+            }
+          };
+        }
+
         newData[row] = { ...newData[row], [dataKey]: newValue.data };
         return newData;
       });
@@ -242,16 +283,16 @@ export default function SuppliersPage() {
         <div className="flex flex-col items-end justify-start">
           <div
             onClick={() => {
-              setData([
-                {
-                  supplier_name: "",
-                  supplies_to_locations: [],
-                  contact_person_name: "",
-                  contact_person_email: "",
-                  supplier_address: "",
-                },
-                ...data,
-              ]);
+              // setData([
+              //   {
+              //     supplier_name: "",
+              //     supplies_to_locations: [],
+              //     contact_person_name: "",
+              //     contact_person_email: "",
+              //     supplier_address: "",
+              //   },
+              //   ...data,
+              // ]);
             }}
             className="bg-teal-accent-dark text-white text-[16px] rounded-xl px-[14px] py-[10px]"
           >
@@ -266,7 +307,7 @@ export default function SuppliersPage() {
 
       <div className="h-[36px]" />
       <div
-        className="w-[100%] h-[calc(100vh-380px)] rounded-xl overflow-clip mx-auto bg-white"
+        className="w-[100%] h-[calc(100vh-380px)] rounded-xl overflow-clip mx-auto bg-white relative"
         // onKeyDown={onKeyDown}
         tabIndex={0}
       >
@@ -296,7 +337,7 @@ export default function SuppliersPage() {
               <MyComboBox 
                 forDataGrid={true}
                 placeholder={"Choose Locations"}
-                options={locations} 
+                options={orgNodes} 
                 value={data[menu.cell[1]].supplies_to_locations} 
                 onChange={(newValue) => {
                   setData(prev => {
@@ -304,21 +345,68 @@ export default function SuppliersPage() {
                     const row = menu.cell[1]
                     newData[row] = {
                       ...newData[row],
-                      supplies_to_locations: newValue
+                      supplies_to_locations: newValue,
+                      supplier_edit_data: {
+                        ...newData[row].supplier_edit_data,
+                        org_node_ids: newValue.map(obj => obj.id),
+                        locations: newValue
+                      }
                     }
                     return newData
                   })
                 }} />
             </div>
           )}
+          {isSuppliersLoading || isSuppliersUpdating ? <RecordsLoader /> : null}
       </div>
 
       <div className="h-[16px]" />
       <div className="flex justify-end">
-        <div className="bg-teal-accent-dark text-white text-[16px] rounded-xl px-[14px] py-[10px]">
+        <div 
+          onClick={() => {
+            if(isSuppliersUpdating || isSuppliersLoading) return null
+            if(suppliers.length === 0 || data.length === 0) return null
+
+            let updatedSuppliers = []
+            for(let newSupplier of data) {
+              if(!suppliers.find(sup => sup.id === newSupplier.id)) { 
+                console.log("This should really not be happening.")
+                continue
+              }
+              
+              if (!compareSupplier(newSupplier, suppliers.find(sup => sup.id === newSupplier.id))) {
+                updatedSuppliers = [newSupplier, ...updatedSuppliers]
+              }
+            }
+
+            if(updatedSuppliers.length > 0)
+              updateSuppliers({suppliers: updatedSuppliers.map(obj => obj.supplier_edit_data)})
+          }}
+          className="bg-teal-accent-dark text-white text-[16px] rounded-xl px-[14px] py-[10px] cursor-pointer">
           SAVE
         </div>
       </div>
     </div>
   );
+}
+
+// const columns = [
+//   { title: "Supplier Name", id: "supplier_name", grow: 1 }, //
+//   { title: "Locations", id: "supplies_to_locations", grow: 3 }, 
+//   { title: "Contact Person", id: "contact_person_name", grow: 1 }, //
+//   { title: "Email", id: "contact_person_email", grow: 1 },
+//   { title: "Address", id: "supplier_address", grow: 1 }, //
+// ]
+
+function compareSupplier(supplierOne, supplierTwo) {
+  if(supplierOne.supplier_name !== supplierTwo.supplier_name) return false
+  else if(supplierOne.contact_person_name !== supplierTwo.contact_person_name) return false
+  else if(supplierOne.supplier_address !== supplierTwo.supplier_address) return false
+  else return compareLocations(supplierOne.supplies_to_locations, supplierTwo.supplies_to_locations)
+}
+
+function compareLocations(locationsOne, locationsTwo) {
+  const locationsOneIds = locationsOne.map(obj => obj.id).sort().join("")
+  const locationsTwoIds = locationsTwo.map(obj => obj.id).sort().join("")
+  return locationsOneIds === locationsTwoIds
 }
