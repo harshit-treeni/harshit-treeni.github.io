@@ -537,7 +537,7 @@ export default function DataStatusReport() {
         {renderConfirmPromptLayer(
           <AnimatePresence>
             {isConfirmPromptOpen && (
-              <div className="bg-white rounded-lg p-[4px] w-[440px] h-[150px] p-4" {...confirmPromptLayerProps}>
+              <div className="bg-white rounded-lg w-[440px] h-[150px] p-4" {...confirmPromptLayerProps}>
                 <div className="flex flex-col justify-between h-full text-[18px]">
                   {"Are you sure you want to notify the user about the chosen records?"}
                   <div className="flex justify-end">
