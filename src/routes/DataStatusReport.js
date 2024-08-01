@@ -196,7 +196,7 @@ export default function DataStatusReport() {
 
 
   useEffect(() => {
-    if(!isFYStartLoading) {
+    if(isFYStartLoading === false) {
       if (FYStart.fin_start_month === 4) {
         dispatch({ type: "FYOption change", FYOption: {
           id: 1,
@@ -271,20 +271,39 @@ export default function DataStatusReport() {
     }
   }, [location, category, indicator, owner, FYOption, fromDate, toDate, pageOption.id, status, currPage])
 
-  const [isOpen, setOpen] = useState(false);
+  const [isDetailsMenuOpen, setIsDetailsMenuOpen] = useState(false);
 
   // helper function to close the menu
-  function close() {
-    setOpen(false);
+  function closeDetailsMenu() {
+    setIsDetailsMenuOpen(false);
   }
 
-  const { renderLayer, triggerProps, layerProps, arrowProps } = useLayer({
-    isOpen,
-    onOutsideClick: close, // close the menu when the user clicks outside
-    onDisappear: close, // close the menu when the menu gets scrolled out of sight
+  const { renderLayer: renderDetailsMenuLayer, triggerProps: detailsMenuTriggerProps, layerProps: detailsMenuLayerProps, arrowProps: detailsMenuArrowProps } = useLayer({
+    isOpen: isDetailsMenuOpen,
+    onOutsideClick: closeDetailsMenu, // close the menu when the user clicks outside
+    onDisappear: closeDetailsMenu, // close the menu when the menu gets scrolled out of sight
     overflowContainer: false, // keep the menu positioned inside the container
     auto: true, // automatically find the best placement
     placement: "bottom-end", // we prefer to place the menu "top-end"
+    triggerOffset: 12, // keep some distance to the trigger
+    containerOffset: 16, // give the menu some room to breath relative to the container
+    arrowOffset: 16, // let the arrow have some room to breath also
+  });
+
+  const [isConfirmPromptOpen, setIsConfirmPromptOpen] = useState(false);
+
+  // helper function to close the menu
+  function closeConfirmPrompt() {
+    setIsConfirmPromptOpen(false);
+  }
+
+  const { renderLayer: renderConfirmPromptLayer, triggerProps: confirmPromptTriggerProps, layerProps: confirmPromptLayerProps, arrowProps: confirmPromptArrowProps } = useLayer({
+    isOpen: isConfirmPromptOpen,
+    onOutsideClick: closeConfirmPrompt, // close the menu when the user clicks outside
+    onDisappear: closeConfirmPrompt, // close the menu when the menu gets scrolled out of sight
+    overflowContainer: false, // keep the menu positioned inside the container
+    auto: true, // automatically find the best placement
+    placement: "right-start", // we prefer to place the menu "top-end"
     triggerOffset: 12, // keep some distance to the trigger
     containerOffset: 16, // give the menu some room to breath relative to the container
     arrowOffset: 16, // let the arrow have some room to breath also
@@ -300,7 +319,7 @@ export default function DataStatusReport() {
           <div className="w-[8px]" />
           <div
             onClick={() => {
-              window.history.go(-1);
+              window.parent.history.go(-1);
             }}
             className="font-[600] font-manrope text-[15px] leading-[18px] select-none"
           >
@@ -316,16 +335,16 @@ export default function DataStatusReport() {
         </div>
 
         <div
-          {...triggerProps}
-          onClick={() => setOpen(!isOpen)}
+          {...detailsMenuTriggerProps}
+          onClick={() => setIsDetailsMenuOpen(!isDetailsMenuOpen)}
           className="cursor-pointer rounded-full"
         >
           <DetailsIcon color={CustomGrayDark} />
         </div>
-        {renderLayer(
+        {renderDetailsMenuLayer(
           <AnimatePresence>
-            {isOpen && (
-              <div className="bg-white rounded-lg p-[4px]" {...layerProps}>
+            {isDetailsMenuOpen && (
+              <div className="bg-white rounded-lg p-[4px]" {...detailsMenuLayerProps}>
                 <div
                   onClick={() => {
                     console.log("export button clicked");
@@ -347,7 +366,7 @@ export default function DataStatusReport() {
                       "*"
                     );
 
-                    close();
+                    closeDetailsMenu();
 
                     toastID.current = toast(<ExportLoadingToast />, {
                       type: "info",
@@ -359,7 +378,7 @@ export default function DataStatusReport() {
                   <BiExport className="text-gray-500 text-[28px] pr-[8px]" />
                   Export
                 </div>
-                <Arrow color="white" {...arrowProps} />
+                <Arrow color="white" {...detailsMenuArrowProps} />
               </div>
             )}
           </AnimatePresence>
@@ -387,7 +406,7 @@ export default function DataStatusReport() {
 
           <div className="w-[16px]" />          
 
-          {isLocationsLoading ? (
+          {isLocationsLoading !== false ? (
             <ComboBoxLoader type={"simple"} />
           ) : (
             <MyComboBox
@@ -402,7 +421,7 @@ export default function DataStatusReport() {
           )}
           <div className="w-[16px]" />
 
-          {isCategoriesLoading ? (
+          {isCategoriesLoading !== false ? (
             <ComboBoxLoader type={"simple"} />
           ) : (
             <MyComboBox
@@ -417,7 +436,7 @@ export default function DataStatusReport() {
           )}
           <div className="w-[16px]" />
 
-          {isIndicatorsLoading ? (
+          {isIndicatorsLoading !== false ? (
             <ComboBoxLoader type={"simple"} />
           ) : (
             <MyComboBox
@@ -434,7 +453,7 @@ export default function DataStatusReport() {
           )}
           <div className="w-[16px]" />
 
-          {isOwnersLoading ? (
+          {isOwnersLoading !== false ? (
             <ComboBoxLoader type={"simple"} />
           ) : (
             <MyComboBox
@@ -473,31 +492,36 @@ export default function DataStatusReport() {
 
       <div className="h-[28px]" />
       <div className="flex justify-between items-end w-full">
-        <div
+        <div 
+          {...confirmPromptTriggerProps}
           onClick={() => {
             // todo notify admin here .....
             if (recordsObj) {
-              if (
-                recordsObj.records.filter((record) => record.select).length ===
-                0
-              )
-                window.alert("Please choose atleast 1 record.");
-              else if (
-                window.confirm(
-                  `Are you sure you want to notify the admin about the chosen records?`
-                )
-              ) {
-                window.parent.postMessage(
-                  {
-                    type: "dsr_notify_admin",
-                    data: recordsObj.records
-                      .filter((record) => record.select)
-                      .map((record) => record.id),
-                  },
-                  "*"
-                );
-                toggleSelectAll(false);
+              if (recordsObj.records.filter((record) => record.select).length === 0) {
+                toast("Please choose atleast 1 record.", {
+                  type: "error",
+                  autoClose: 5000,
+                });
+                // window.alert("Please choose atleast 1 record.");
+              } else {
+                setIsConfirmPromptOpen(true)
               }
+              // else if (
+              //   window.confirm(
+              //     `Are you sure you want to notify the admin about the chosen records?`
+              //   )
+              // ) {
+              //   window.parent.postMessage(
+              //     {
+              //       type: "dsr_notify_admin",
+              //       data: recordsObj.records
+              //         .filter((record) => record.select)
+              //         .map((record) => record.id),
+              //     },
+              //     "*"
+              //   );
+              //   toggleSelectAll(false);
+              // }
             }
           }}
           className="bg-gray-palette-lightest rounded-full font-manrope text-[16px] font-[600] leading-[16px] py-[16px] px-[20px] text-white cursor-pointer"
@@ -510,6 +534,46 @@ export default function DataStatusReport() {
               )
             : null}
         </div>
+        {renderConfirmPromptLayer(
+          <AnimatePresence>
+            {isConfirmPromptOpen && (
+              <div className="bg-white rounded-lg p-[4px] w-[440px] h-[150px] p-4" {...confirmPromptLayerProps}>
+                <div className="flex flex-col justify-between h-full text-[18px]">
+                  {"Are you sure you want to notify the user about the chosen records?"}
+                  <div className="flex justify-end">
+                    <div 
+                      onClick={() => {
+                        window.parent.postMessage(
+                          {
+                            type: "dsr_notify_admin",
+                            data: recordsObj.records
+                              .filter((record) => record.select)
+                              .map((record) => record.id),
+                          },
+                          "*"
+                        );
+                        toggleSelectAll(false);
+                        closeConfirmPrompt();
+                      }}
+                      className="py-1 px-2 bg-green-700 rounded-lg text-white font-semibold text-[16px] cursor-pointer">
+                      {"Yes".toUpperCase()}
+                    </div>
+                    <div className="w-[18px]" />
+                    <div 
+                      onClick={() => {
+                        toggleSelectAll(false);
+                        closeConfirmPrompt()
+                      }}
+                      className="py-1 px-2 bg-red-500 rounded-lg text-white font-semibold text-[16px] cursor-pointer">
+                      {"No".toUpperCase()}
+                    </div>
+                  </div>
+                </div>
+                <Arrow color="white" {...confirmPromptArrowProps} />
+              </div>
+            )}
+          </AnimatePresence>
+        )}
 
         <div className="flex items-center">
           <div className="font-manrope font-[600] text-[16px] leading-[20px]">
@@ -527,6 +591,7 @@ export default function DataStatusReport() {
           ) : null}
         </div>
       </div>
+
       <div className="h-[42px]" />
       <div className="w-full rounded-[14px] overflow-hidden relative">
         <RecordsBlock
@@ -536,7 +601,7 @@ export default function DataStatusReport() {
           toggleRecordSelect={toggleRecordSelect}
           toggleSelectAll={toggleSelectAll}
         />
-        {isrecordsLoading ? <RecordsLoader /> : null}
+        {isrecordsLoading !== false ? <RecordsLoader /> : null}
       </div>
       <div className="h-[28px]" />
       <div className="flex items-center justify-between w-full">

@@ -4,7 +4,7 @@ import DataEditor, { GridCellKind } from "@glideapps/glide-data-grid";
 import "@glideapps/glide-data-grid/dist/index.css";
 import { BiSearchAlt } from "react-icons/bi";
 import { useLayer } from "react-laag";
-import { useFetchSuppliers, useUpdateSuppliers } from "../hooks/data_fetch_suppliers";
+import { useCreateSuppliers, useFetchSuppliers, useUpdateSuppliers } from "../hooks/data_fetch_suppliers";
 import { useFetchOrgNodes } from "../hooks/data_fetch_methods";
 
 import MyComboBox from "./../components/MyComboBox"
@@ -59,21 +59,22 @@ export default function SuppliersPage() {
   const [orgNodes, isOrgNodesLoading, fetchOrgNodes] = useFetchOrgNodes()
   const [suppliers, isSuppliersLoading, fetchSuppliers] = useFetchSuppliers()
   const [updateSuppliersResponse, isSuppliersUpdating, updateSuppliers] = useUpdateSuppliers()
+  const [createSupplierResponse, isSuppliersCreating, createSuppliers] = useCreateSuppliers()
   
   useEffect(() => {
     fetchOrgNodes()
   }, [])
 
   useEffect(() => {
-    if(!isSuppliersUpdating) {
-      fetchSuppliers()
-    }
+    if(!isSuppliersUpdating) fetchSuppliers()
   }, [isSuppliersUpdating])
 
   useEffect(() => {
-    if(!isSuppliersLoading) {
-      setData(suppliers)
-    }
+    if(isSuppliersCreating === false) fetchSuppliers()
+  }, [isSuppliersCreating])
+
+  useEffect(() => {
+    if(isSuppliersLoading === false) setData(suppliers)
   }, [isSuppliersLoading])
 
 
@@ -107,10 +108,10 @@ export default function SuppliersPage() {
       return {
         kind: GridCellKind.Text,
         allowOverlay: true,
-        readonly: col === 3 ? true : false,
+        readonly: col === 3 && dataRow.id ? true : false,
         displayData: cellData?.toString() || "",
         data: cellData,
-        themeOverride: [undefined, "", null].includes(cellData)
+        themeOverride: (col !== 3 && [undefined, "", null].includes(cellData)) || (col === 3 && !isEmailValid(cellData))
           ? {
               ...customTheme,
               bgCell: "#FF000026",
@@ -283,16 +284,19 @@ export default function SuppliersPage() {
         <div className="flex flex-col items-end justify-start">
           <div
             onClick={() => {
-              // setData([
-              //   {
-              //     supplier_name: "",
-              //     supplies_to_locations: [],
-              //     contact_person_name: "",
-              //     contact_person_email: "",
-              //     supplier_address: "",
-              //   },
-              //   ...data,
-              // ]);
+              if(gridRef.current === null) return
+
+              gridRef.current.scrollTo(0, 0)
+              setData([
+                {
+                  supplier_name: "",
+                  supplies_to_locations: [],
+                  contact_person_name: "",
+                  contact_person_email: "",
+                  supplier_address: "",
+                },
+                ...data,
+              ]);
             }}
             className="bg-teal-accent-dark text-white text-[16px] rounded-xl px-[14px] py-[10px]"
           >
@@ -357,30 +361,70 @@ export default function SuppliersPage() {
                 }} />
             </div>
           )}
-          {isSuppliersLoading || isSuppliersUpdating ? <RecordsLoader /> : null}
+          {isSuppliersLoading !== false || isSuppliersUpdating || isSuppliersCreating ? <RecordsLoader /> : null}
       </div>
 
       <div className="h-[16px]" />
       <div className="flex justify-end">
         <div 
           onClick={() => {
-            if(isSuppliersUpdating || isSuppliersLoading) return null
+            if(gridRef.current === null) return
+            if(isSuppliersLoading !== false || isSuppliersUpdating || isSuppliersCreating ) return null
             if(suppliers.length === 0 || data.length === 0) return null
 
+            // todo: handle validation
+            let areEmptyRecordsPresent = false
+            let validData = []
+            for(let i = 0; i < data.length; i++) {
+              if(isDatumEmpty(data[i])) {
+                areEmptyRecordsPresent = true
+                continue
+              }
+              
+              const invalidColumns = getInvalidColumns(data[i])
+              if(invalidColumns.length > 0) 
+                return gridRef.current.scrollTo(invalidColumns[0], i)             
+              
+              validData.push(data[i])
+            }
+
             let updatedSuppliers = []
-            for(let newSupplier of data) {
-              if(!suppliers.find(sup => sup.id === newSupplier.id)) { 
+            for(let latestSup of validData.filter(sup => sup.id)) {
+              if(!suppliers.find(sup => sup.id === latestSup.id)) { 
                 console.log("This should really not be happening.")
                 continue
               }
               
-              if (!compareSupplier(newSupplier, suppliers.find(sup => sup.id === newSupplier.id))) {
-                updatedSuppliers = [newSupplier, ...updatedSuppliers]
+              if (!areSuppliersEqual(latestSup, suppliers.find(sup => sup.id === latestSup.id))) {
+                updatedSuppliers = [latestSup, ...updatedSuppliers]
               }
             }
 
             if(updatedSuppliers.length > 0)
               updateSuppliers({suppliers: updatedSuppliers.map(obj => obj.supplier_edit_data)})
+
+            const newSuppliers = validData.filter(sup => !sup.id)
+            if(newSuppliers.length > 0) {
+              const payload = newSuppliers
+                .map(sup => ({
+                  action: "new",
+                  org_node_type_id: "", // get the org node type id here 
+                  name: sup.supplier_name,
+                  myLocations: sup.supplies_to_locations.map(loc => loc.name).join(", "),
+                  locations: sup.supplies_to_locations,
+                  supplier_user: {
+                    name: sup.contact_person_name,
+                    email: sup.contact_person_email,
+                  },
+                  address: sup.supplier_address,
+                  org_node_ids: sup.supplies_to_locations.map(loc => loc.id),
+                }))
+              createSuppliers({suppliers: payload})
+            }
+            if(updatedSuppliers.length === 0 && newSuppliers.length === 0 && areEmptyRecordsPresent) {
+              console.log("in case there")
+              fetchSuppliers()
+            }
           }}
           className="bg-teal-accent-dark text-white text-[16px] rounded-xl px-[14px] py-[10px] cursor-pointer">
           SAVE
@@ -398,15 +442,41 @@ export default function SuppliersPage() {
 //   { title: "Address", id: "supplier_address", grow: 1 }, //
 // ]
 
-function compareSupplier(supplierOne, supplierTwo) {
+function areSuppliersEqual(supplierOne, supplierTwo) {
   if(supplierOne.supplier_name !== supplierTwo.supplier_name) return false
   else if(supplierOne.contact_person_name !== supplierTwo.contact_person_name) return false
   else if(supplierOne.supplier_address !== supplierTwo.supplier_address) return false
-  else return compareLocations(supplierOne.supplies_to_locations, supplierTwo.supplies_to_locations)
+  else return areLocationsEqual(supplierOne.supplies_to_locations, supplierTwo.supplies_to_locations)
 }
 
-function compareLocations(locationsOne, locationsTwo) {
+function areLocationsEqual(locationsOne, locationsTwo) {
   const locationsOneIds = locationsOne.map(obj => obj.id).sort().join("")
   const locationsTwoIds = locationsTwo.map(obj => obj.id).sort().join("")
   return locationsOneIds === locationsTwoIds
+}
+
+function isDatumEmpty(datum) {
+  if(
+    datum.supplier_name === "" && 
+    datum.supplies_to_locations.length === 0 &&
+    datum.contact_person_name === "" &&
+    datum.contact_person_email === "" &&
+    datum.supplier_address === ""
+  ) return true
+  else return false
+}
+
+function getInvalidColumns(datum) {
+  let arr = []
+  if(datum.supplier_name === "") arr.push(0)
+  if(datum.supplies_to_locations.length === 0) arr.push(1)
+  if(datum.contact_person_name === "") arr.push(2)
+  if(!isEmailValid(datum.contact_person_email)) arr.push(3)
+  if(datum.supplier_address === "") arr.push(4)
+  return arr
+}
+
+function isEmailValid(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
 }

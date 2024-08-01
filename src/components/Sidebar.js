@@ -241,7 +241,7 @@ export default function Sidebar() {
 
   const { isCollapsed, nav } = state;
 
-  if(isModulesLoading === true) return null
+  if(isModulesLoading === true || modules === null) return null
   
   return (
     <div

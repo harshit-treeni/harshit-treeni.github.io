@@ -23,8 +23,8 @@ const getParamStr = (paramsArr) => {
   return paramsStr !== "" ? "?" + paramsStr : paramsStr;
 }
 
-export const useDataFetchGet = (returnMessageType, init) => {
-  const [ state, dispatch] = useReducer(
+export const useDataFetch = (returnMessageType, init, method) => {
+  const [state, dispatch] = useReducer(
     (state, action) => {
       // eslint-disable-next-line default-case
       switch (action.type) {
@@ -39,15 +39,15 @@ export const useDataFetchGet = (returnMessageType, init) => {
             isLoading: true
           }
       }
-    },{
-    data: init,
-    isLoading: true
-  })
-
+    }, {
+      data: init,
+      loading: undefined
+    }
+  )
 
   const onMessageListener = useCallback(async (e) => {
     if (e.data.type === returnMessageType) {
-      dispatch({ type: "data_loaded", data: e.data.response})
+      dispatch({ type: "data_loaded", data: e.data.response })
     }
   }, []);
 
@@ -56,22 +56,26 @@ export const useDataFetchGet = (returnMessageType, init) => {
     return () => window.removeEventListener("message", onMessageListener);
   }, []);
 
-  const dataFetchGet = (path, params) => {
+  const dataFetch = (path, params) => {
     window.parent.postMessage(
       {
         type: "fetch",
-        method: "GET",
-        path: path + getParamStr(params),
+        method,
+        path: path + (method === "GET" ? getParamStr(params) : ""),
+        body: params,
         returnMessageType,
       },
       "*"
     );
-    dispatch({type: "data_loading"})
+    dispatch({ type: "data_loading" })
   };
 
-  return [state.data, state.isLoading, dataFetchGet];
-};
+  return [state.data, state.isLoading, dataFetch];
+}
 
+export const useDataFetchGet = (returnMessageType, init) => useDataFetch(returnMessageType, init, "GET");
+export const useDataFetchPut = (returnMessageType, init) => useDataFetch(returnMessageType, init, "PUT");
+export const useDataFetchPost = (returnMessageType, init) => useDataFetch(returnMessageType, init, "POST");
 
 export const useFetchModules = () => {
   const [data, isLoading, dataFetchGet] = useDataFetchGet("dsr_sidebar_modules", null)
@@ -80,21 +84,13 @@ export const useFetchModules = () => {
 }
 
 export const useFetchLocations = () => {
-  const [data, isLoading, dataFetchGet] = useDataFetchGet(
-    "dsr_locations",
-    []
-  );
-
-  const fetchLocations = (params) => dataFetchGet("goals/org_nodes.json", params);
+  const [data, isLoading, dataFetchGet] = useDataFetchGet("dsr_locations", []);
+  const fetchLocations = () => dataFetchGet("goals/org_nodes.json");
   return [data, isLoading, fetchLocations];
 };
 
 export const useFetchOrgNodes = () => {
-  const [data, isLoading, dataFetchGet] = useDataFetchGet(
-    "org_nodes",
-    []
-  );
-
+  const [data, isLoading, dataFetchGet] = useDataFetchGet("org_nodes", []);
   const fetchOrgNodes = (params) => dataFetchGet("org_nodes.json", params);
   return [data, isLoading, fetchOrgNodes];
 }
