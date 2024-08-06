@@ -4,7 +4,7 @@ import DataEditor, { GridCellKind } from "@glideapps/glide-data-grid";
 import "@glideapps/glide-data-grid/dist/index.css";
 import { BiSearchAlt } from "react-icons/bi";
 import { useLayer } from "react-laag";
-import { useCreateSuppliers, useFetchSuppliers, useUpdateSuppliers } from "../hooks/data_fetch_suppliers";
+import { useCreateSuppliers, useDeleteSuppliers, useFetchSupplierNodeId, useFetchSuppliers, useUpdateSuppliers } from "../hooks/data_fetch_suppliers";
 import { useFetchOrgNodes } from "../hooks/data_fetch_methods";
 
 import MyComboBox from "./../components/MyComboBox"
@@ -43,40 +43,60 @@ const customTheme = {
   editorFontSize: "20px",
 };
 
-const columns = [
-  { title: "Supplier Name", id: "supplier_name", grow: 1 },
-  { title: "Locations", id: "supplies_to_locations", grow: 3 },
-  { title: "Contact Person", id: "contact_person_name", grow: 1 },
-  { title: "Email", id: "contact_person_email", grow: 1 },
-  { title: "Address", id: "supplier_address", grow: 1 },
-];
+const headerIcons = {
+  "checkbox-unchecked": (p) =>
+    `<svg viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path fill-rule="evenodd" clip-rule="evenodd" d="M6 5C5.44772 5 5 5.44772 5 6V13V18C5 18.5523 5.44772 19 6 19H18C18.5523 19 19 18.5523 19 18V13V6C19 5.44772 18.5523 5 18 5H6ZM3 6C3 4.34315 4.34315 3 6 3H18C19.6569 3 21 4.34315 21 6V13V18C21 19.6569 19.6569 21 18 21H6C4.34315 21 3 19.6569 3 18V13V6Z" fill="#fff"></path> </g></svg>`,
+  "checkbox-checked": (p) =>
+    `<svg xmlns="http://www.w3.org/2000/svg" fill="#fff" viewBox="0 0 21 21"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.89-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"></path></g></svg>`,
+};
 
 export default function SuppliersPage() {
-  const [data, setData] = useState([]);
-  // const [gridSelection, setGridSelection] = useState();
   const gridRef = useRef(null);
-
+  
   const [orgNodes, isOrgNodesLoading, fetchOrgNodes] = useFetchOrgNodes()
+  const [supplierNodeId, isSupplierNodeIdLoading, fetchSupplierNodeId] = useFetchSupplierNodeId()
+
   const [suppliers, isSuppliersLoading, fetchSuppliers] = useFetchSuppliers()
   const [updateSuppliersResponse, isSuppliersUpdating, updateSuppliers] = useUpdateSuppliers()
-  const [createSupplierResponse, isSuppliersCreating, createSuppliers] = useCreateSuppliers()
+  const [createSuppliersResponse, isSuppliersCreating, createSuppliers] = useCreateSuppliers()
+  const [deleteSuppliersResponse, isSuppliersDeleting, deleteSuppliers] = useDeleteSuppliers()
+  
+  const [data, setData] = useState([]);
+  // const [gridSelection, setGridSelection] = useState();
+  const [selectAllSuppliers, setSelectAllSuppliers] = useState(false)
+
+  const columns = [
+    {
+      title: "",
+      id: "select",
+      width: 60,
+      icon: selectAllSuppliers ? "checkbox-checked" : "checkbox-unchecked",
+      themeOverride: {
+        ...customTheme,
+        cellHorizontalPadding: 19,
+      },
+    },
+    { title: "Supplier Name", id: "supplier_name", grow: 1 },
+    { title: "Locations", id: "supplies_to_locations", grow: 3 },
+    { title: "Contact Person", id: "contact_person_name", grow: 1 },
+    { title: "Email", id: "contact_person_email", grow: 1 },
+    { title: "Address", id: "supplier_address", grow: 1 },
+  ];
   
   useEffect(() => {
     fetchOrgNodes()
+    fetchSupplierNodeId()
   }, [])
 
   useEffect(() => {
-    if(!isSuppliersUpdating) fetchSuppliers()
-  }, [isSuppliersUpdating])
-
-  useEffect(() => {
-    if(isSuppliersCreating === false) fetchSuppliers()
-  }, [isSuppliersCreating])
+    if(!isSuppliersCreating && !isSuppliersUpdating && !isSuppliersDeleting) {
+      fetchSuppliers()
+    }
+  }, [isSuppliersCreating, isSuppliersUpdating, isSuppliersDeleting])
 
   useEffect(() => {
     if(isSuppliersLoading === false) setData(suppliers)
   }, [isSuppliersLoading])
-
 
 
   const getCellContent = useCallback(
@@ -86,7 +106,16 @@ export default function SuppliersPage() {
       const dataKey = columns.map((obj) => obj.id)[col];
       const cellData = dataRow[dataKey];
 
-      if (col === 1) {
+      if (dataKey === "select") {
+        return {
+          kind: GridCellKind.Boolean,
+          displayData: cellData,
+          data: cellData,
+          contentAlign: "center"
+        };
+      }
+
+      if (dataKey === "supplies_to_locations") {
         return {
           kind: GridCellKind.Text,
           allowOverlay: false,
@@ -108,10 +137,10 @@ export default function SuppliersPage() {
       return {
         kind: GridCellKind.Text,
         allowOverlay: true,
-        readonly: col === 3 && dataRow.id ? true : false,
+        readonly: dataKey === "contact_person_email" && dataRow.id ? true : false,
         displayData: cellData?.toString() || "",
         data: cellData,
-        themeOverride: (col !== 3 && [undefined, "", null].includes(cellData)) || (col === 3 && !isEmailValid(cellData))
+        themeOverride: (dataKey !== "contact_person_email" && [undefined, "", null].includes(cellData)) || (dataKey === "contact_person_email" && !isEmailValid(cellData))
           ? {
               ...customTheme,
               bgCell: "#FF000026",
@@ -130,9 +159,22 @@ export default function SuppliersPage() {
       const [col, row] = cell;
       const dataKey = columns.map((obj) => obj.id)[col];
 
+      let newSelectedAllSuppliers = null
       setData((prevData) => {
         const newData = [...prevData];
-        if(col === 0) {
+        if (dataKey === "select") {
+          const unselectedRows = newData.map((sup, indx) => ({...sup, indx})).filter(sup => !sup.select)
+          if(unselectedRows.length === 0) {
+            newSelectedAllSuppliers = false
+          } else if (unselectedRows.length === 1 && (unselectedRows[0].indx === row)) {
+            newSelectedAllSuppliers = true
+          }
+            
+          newData[row] = {
+            ...newData[row],
+            [dataKey]: newValue.data
+          }
+          } else if (dataKey === "supplier_name") {
           newData[row] = { 
             ...newData[row], 
             [dataKey]: newValue.data, 
@@ -141,7 +183,7 @@ export default function SuppliersPage() {
               name: newValue.data
             }
           };
-        } else if(col === 2) {
+        } else if (dataKey === "contact_person_name") {
           newData[row] = { 
             ...newData[row], 
             [dataKey]: newValue.data, 
@@ -153,8 +195,12 @@ export default function SuppliersPage() {
               }
             }
           };
-        } else {
-          // col should be equal to 4
+        } else if (dataKey === "contact_person_email") {
+          newData[row] = { 
+            ...newData[row], 
+            [dataKey]: newValue.data,
+          }
+        } else if (dataKey === "supplier_address") {
           newData[row] = { 
             ...newData[row], 
             [dataKey]: newValue.data, 
@@ -168,6 +214,10 @@ export default function SuppliersPage() {
         newData[row] = { ...newData[row], [dataKey]: newValue.data };
         return newData;
       });
+
+      if(newSelectedAllSuppliers !== null) {
+        setSelectAllSuppliers(newSelectedAllSuppliers)
+      }
     },
     [data]
   );
@@ -260,7 +310,8 @@ export default function SuppliersPage() {
   });
 
   const handleCellClicked = (...args) => {
-    if (args[0][0] === 1)
+    // supplies to locations click
+    if (args[0][0] === 2)
       if (menu?.cell[1] !== args[0][1])
         setMenu({ cell: args[0], bounds: args[1].bounds, first: true });
   };
@@ -284,16 +335,18 @@ export default function SuppliersPage() {
         <div className="flex flex-col items-end justify-start">
           <div
             onClick={() => {
-              if(gridRef.current === null) return
+              if(gridRef.current === null || !supplierNodeId) return
 
               gridRef.current.scrollTo(0, 0)
               setData([
                 {
+                  select: false,
                   supplier_name: "",
                   supplies_to_locations: [],
                   contact_person_name: "",
                   contact_person_email: "",
                   supplier_address: "",
+                  supplier_node_id: supplierNodeId
                 },
                 ...data,
               ]);
@@ -316,6 +369,13 @@ export default function SuppliersPage() {
         tabIndex={0}
       >
         <DataEditor
+          onHeaderClicked={(...args) => {
+            if(args[0] === 0) {
+              setData(prev => [...prev].map(sup => ({...sup, select: !selectAllSuppliers})))
+              setSelectAllSuppliers(!selectAllSuppliers)
+            }
+          }}
+          headerIcons={headerIcons}
           onPaste={false}
           ref={gridRef}
           columns={columns}
@@ -361,11 +421,25 @@ export default function SuppliersPage() {
                 }} />
             </div>
           )}
-          {isSuppliersLoading !== false || isSuppliersUpdating || isSuppliersCreating ? <RecordsLoader /> : null}
+          {isSuppliersLoading !== false || isSuppliersUpdating || isSuppliersCreating || isSuppliersDeleting ? <RecordsLoader /> : null}
       </div>
 
       <div className="h-[16px]" />
       <div className="flex justify-end">
+        {data.reduce((accum, curr) => accum + (curr.select ? 1 : 0), 0) === 0 ? null : (
+          <div
+            onClick={() => {
+              if(isSuppliersDeleting) return null 
+
+              const selectedSupplierIds = data.filter(sup => sup.id && sup.select).map(sup => sup.id)
+              deleteSuppliers(selectedSupplierIds.map((id, index) => [`supplier_ids[${index}]`, id]))
+            }}
+            className="bg-teal-accent-dark text-white text-[16px] rounded-xl px-[14px] py-[10px] cursor-pointer">
+            {`DELETE ${data.reduce((accum, curr) => accum + (curr.select ? 1 : 0), 0)}`}
+          </div>
+        )}
+        
+        <div className="w-[24px]" />
         <div 
           onClick={() => {
             if(gridRef.current === null) return
@@ -391,7 +465,6 @@ export default function SuppliersPage() {
             let updatedSuppliers = []
             for(let latestSup of validData.filter(sup => sup.id)) {
               if(!suppliers.find(sup => sup.id === latestSup.id)) { 
-                console.log("This should really not be happening.")
                 continue
               }
               
@@ -408,7 +481,7 @@ export default function SuppliersPage() {
               const payload = newSuppliers
                 .map(sup => ({
                   action: "new",
-                  org_node_type_id: "", // get the org node type id here 
+                  org_node_type_id: sup.supplier_node_id,
                   name: sup.supplier_name,
                   myLocations: sup.supplies_to_locations.map(loc => loc.name).join(", "),
                   locations: sup.supplies_to_locations,
@@ -422,7 +495,7 @@ export default function SuppliersPage() {
               createSuppliers({suppliers: payload})
             }
             if(updatedSuppliers.length === 0 && newSuppliers.length === 0 && areEmptyRecordsPresent) {
-              console.log("in case there")
+              console.log("in case there are empty rows")
               fetchSuppliers()
             }
           }}
@@ -433,14 +506,6 @@ export default function SuppliersPage() {
     </div>
   );
 }
-
-// const columns = [
-//   { title: "Supplier Name", id: "supplier_name", grow: 1 }, //
-//   { title: "Locations", id: "supplies_to_locations", grow: 3 }, 
-//   { title: "Contact Person", id: "contact_person_name", grow: 1 }, //
-//   { title: "Email", id: "contact_person_email", grow: 1 },
-//   { title: "Address", id: "supplier_address", grow: 1 }, //
-// ]
 
 function areSuppliersEqual(supplierOne, supplierTwo) {
   if(supplierOne.supplier_name !== supplierTwo.supplier_name) return false

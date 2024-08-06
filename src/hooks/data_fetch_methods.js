@@ -61,7 +61,7 @@ export const useDataFetch = (returnMessageType, init, method) => {
       {
         type: "fetch",
         method,
-        path: path + (method === "GET" ? getParamStr(params) : ""),
+        path: path + (["GET", "DELETE"].includes(method) ? getParamStr(params) : ""),
         body: params,
         returnMessageType,
       },
@@ -76,6 +76,7 @@ export const useDataFetch = (returnMessageType, init, method) => {
 export const useDataFetchGet = (returnMessageType, init) => useDataFetch(returnMessageType, init, "GET");
 export const useDataFetchPut = (returnMessageType, init) => useDataFetch(returnMessageType, init, "PUT");
 export const useDataFetchPost = (returnMessageType, init) => useDataFetch(returnMessageType, init, "POST");
+export const useDataFetchDelete = (returnMessageType, init) => useDataFetch(returnMessageType, init, "DELETE");
 
 export const useFetchModules = () => {
   const [data, isLoading, dataFetchGet] = useDataFetchGet("dsr_sidebar_modules", null)

@@ -13,16 +13,18 @@ import DocumentIcon from "../icons/DocumentIcon";
 import EditIcon from "../icons/EditIcon";
 import SearchIcon from "../icons/SearchIcon";
 import PeopleIcon from "../icons/PeopleIcon";
-import { GoPeople } from "react-icons/go";
-
-import { useEffect, useReducer, useRef } from "react";
 
 import { ReactComponent as Avatar } from "./../avatar.svg";
 import { ReactComponent as WiproLogo } from "./../logos/wipro_logo.svg";
+import logoPlaceholder from "./../logos/logo-placeholder.jpg"
+
+import { GoPeople } from "react-icons/go";
 import { IoHomeOutline } from "react-icons/io5";
 import { useLocation } from "react-router-dom";
 import { GrayPalette } from "../colors";
 import { useFetchModules } from "../hooks/data_fetch_methods";
+
+import { useEffect, useReducer, useRef } from "react";
 
 const dataMngmtNavObjs = [
   {
@@ -483,7 +485,7 @@ const SidebarHeader = ({ isCollapsed }) => {
         }
       )}
     >
-      <WiproLogo
+      {/* <WiproLogo
         className="cursor-pointer"
         onClick={() => {
           window.parent.postMessage(
@@ -491,7 +493,11 @@ const SidebarHeader = ({ isCollapsed }) => {
             "*"
           );
         }}
-      />
+      /> */}
+      
+      <img 
+        className="h-[48px]"
+        src={logoPlaceholder} alt="Logo" />
 
       {isCollapsed ? <div className="h-[28px]" /> : null}
 

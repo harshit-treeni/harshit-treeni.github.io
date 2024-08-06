@@ -81,7 +81,7 @@ export default function RecordsBlock({ recordsObj, toggleRecordSelect, toggleSel
       { title: "End Date", id: "endDate", grow: 1 },
       { title: "Site Name", id: "siteName", grow: 1 },
       { title: "Count", id: "count", with: 40 },
-      { title: "Owner", id: "owner", grow: 1 },
+      { title: "Owner", id: "owner", grow: 5 },
     ];
   }, [recordsObj.selectAll]);
 
