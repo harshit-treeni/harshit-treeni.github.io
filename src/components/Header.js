@@ -8,7 +8,7 @@ export default function Header() {
       <div className="flex-1 h-[48px] rounded-lg flex items-center py-[6px] pr-[6px] pl-[20px] bg-white">
         <input
           disabled
-          className="w-full outline-none text-[14px] placeholder:text-[#4F5771] placeholder:text-[14px]"
+          className="w-full outline-none text-[14px] placeholder:text-[#4F5771] placeholder:text-[14px] bg-white"
           placeholder="Search Dashboard"
         />
         <div className="rounded-lg bg-gray-palette-lightest h-[36px] px-[12px] flex justify-center items-center cursor-not-allowed">

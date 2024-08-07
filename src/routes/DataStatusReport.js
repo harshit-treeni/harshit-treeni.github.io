@@ -1,6 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { FaArrowLeft } from "react-icons/fa6";
-import { CustomGrayDark } from "../colors";
 
 import DetailsIcon from "../icons/DetailsIcon";
 
@@ -312,17 +311,14 @@ export default function DataStatusReport() {
   return (
     <div className="p-[48px] flex flex-col justify-start items-start ">
       <div className="w-full flex items-center">
-        <div className="rounded-full p-[8px] bg-[white] flex items-center cursor-pointer">
+        <div 
+          onClick={() => window.parent.postMessage({ type: "window_back"}, "*")}
+          className="rounded-full p-[8px] bg-[white] flex items-center cursor-pointer">
           <div className="bg-gray-palette-lightest/[0.1] rounded-full w-[24px] h-[24px] flex justify-center items-center">
             <FaArrowLeft className="text-gray-palette-lightest text-[14px]" />
           </div>
           <div className="w-[8px]" />
-          <div
-            onClick={() => {
-              window.parent.history.go(-1);
-            }}
-            className="font-[600] font-manrope text-[15px] leading-[18px] select-none"
-          >
+          <div className="font-[600] font-manrope text-[15px] leading-[18px] select-none">
             {"Back"}
           </div>
           <div className="w-[8px]" />
@@ -339,12 +335,12 @@ export default function DataStatusReport() {
           onClick={() => setIsDetailsMenuOpen(!isDetailsMenuOpen)}
           className="cursor-pointer rounded-full"
         >
-          <DetailsIcon color={CustomGrayDark} />
+          <DetailsIcon className="stroke-gray-500" />
         </div>
         {renderDetailsMenuLayer(
           <AnimatePresence>
             {isDetailsMenuOpen && (
-              <div className="bg-white rounded-lg p-[4px]" {...detailsMenuLayerProps}>
+              <div className="bg-white rounded-lg p-[4px] border border-gray-300" {...detailsMenuLayerProps}>
                 <div
                   onClick={() => {
                     console.log("export button clicked");
@@ -378,7 +374,7 @@ export default function DataStatusReport() {
                   <BiExport className="text-gray-500 text-[28px] pr-[8px]" />
                   Export
                 </div>
-                <Arrow color="white" {...detailsMenuArrowProps} />
+                <Arrow borderWidth={1} borderColor="#D1D5DB" {...detailsMenuArrowProps} />
               </div>
             )}
           </AnimatePresence>
@@ -662,8 +658,7 @@ function PaginationBlock({ recordsObj, setCurrPage }) {
                   onClick={() => handlePageClick(pg)}
                   className={clsx({
                     "cursor-pointer rounded-md border border-black/5 px-[16px] py-[10px] font-manrope font-[600] text-[12px]": true,
-                    "bg-gray-palette-lightest text-white":
-                      recordsObj.page === pg,
+                    "bg-gray-palette-lightest text-white": recordsObj.page === pg,
                     "bg-white text-black": recordsObj.page !== pg,
                   })}
                 >

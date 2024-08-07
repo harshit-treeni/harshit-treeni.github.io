@@ -9,6 +9,7 @@ import { useFetchOrgNodes } from "../hooks/data_fetch_methods";
 
 import MyComboBox from "./../components/MyComboBox"
 import RecordsLoader from "../components/RecordsLoader";
+import { toast } from "react-toastify";
 
 const teal = {
   primaryColor: "#009688", // Teal
@@ -62,7 +63,7 @@ export default function SuppliersPage() {
   const [deleteSuppliersResponse, isSuppliersDeleting, deleteSuppliers] = useDeleteSuppliers()
   
   const [data, setData] = useState([]);
-  // const [gridSelection, setGridSelection] = useState();
+  const [gridSelection, setGridSelection] = useState();
   const [selectAllSuppliers, setSelectAllSuppliers] = useState(false)
 
   const columns = [
@@ -222,57 +223,81 @@ export default function SuppliersPage() {
     [data]
   );
 
-  // const copySelection = useCallback(() => {
-  //   if (gridSelection?.current === undefined) return "";
+  const copySelection = useCallback(() => {
+    if (gridSelection?.current === undefined) return "";
 
-  //   const { x, y, width, height } = gridSelection.current.range;
-  //   let result = "";
+    const { x, y, width, height } = gridSelection.current.range;
+    let result = "";
 
-  //   for (let row = y; row < y + height; row++) {
-  //     for (let col = 0; col < x; col++) result += "\t";
-  //     for (let col = x; col < x + width; col++) {
-  //       const cell = getCellContent([col, row]);
-  //       result += cell.data;
-  //       if (col < x + width - 1) result += "\t";
-  //     }
-  //     for (let col = x + width; col < 5; col++) result += "\t";
-  //     if (row < y + height - 1) result += "\n";
-  //   }
+    const dataKeys = columns.map(obj => obj.id)
 
-  //   return result;
-  // }, [gridSelection, getCellContent]);
+    for (let row = y; row < y + height; row++) {
+      for (let col = 0; col < x; col++) result += "\t";
+      for (let col = x; col < x + width; col++) {
+        const cell = getCellContent([col, row]);
+        if(dataKeys[col] === "supplies_to_locations") {
+          result += cell.data.map(obj => obj.id).join("|");
+        } else {
+          result += cell.data
+        }
+        if (col < x + width - 1) result += "\t";
+      }
+      for (let col = x + width; col < columns.length; col++) result += "\t";
+      if (row < y + height - 1) result += "\n";
+    }
 
-  // const pasteData = useCallback((pasteString) => {
-  //   const rows = pasteString.split("\n");
-  //   const newData = rows.map((row) => {
-  //     const cells = row.split("\t");
-  //     return {
-  //       supplier: cells[0],
-  //       locations: cells[1],
-  //       person: cells[2],
-  //       email: cells[3],
-  //       address: cells[4],
-  //     };
-  //   });
+    console.log(result.split("\t"))
 
-  //   setData((prevData) => [...newData, ...prevData]);
-  // }, []);
+    return result;
+  }, [gridSelection, getCellContent]);
 
-  // const onKeyDown = useCallback(
-  //   (e) => {
-  //     if (e.key === "c" && (e.ctrlKey || e.metaKey)) {
-  //       const copyText = copySelection();
-  //       navigator.clipboard.writeText(copyText).then(() => {
-  //         console.log("Copied to clipboard");
-  //       });
-  //     } else if (e.key === "v" && (e.ctrlKey || e.metaKey)) {
-  //       navigator.clipboard.readText().then((pasteText) => {
-  //         pasteData(pasteText);
-  //       });
-  //     }
-  //   },
-  //   [copySelection, pasteData]
-  // );
+  const pasteData = useCallback((pasteString) => {
+    const rows = pasteString.split("\n");
+    const dataKeys = columns.map(obj => obj.id)
+    const newData = rows.map((row) => {
+      const cells = row.split("\t");
+      let datum = { select: false }
+      for(let i = 1; i < cells.length; i++) {
+        if(dataKeys[i] === "supplies_to_locations") {
+          datum = {
+            ...datum,
+            supplies_to_locations:
+              cells[i] === ""
+                ? []
+                : cells[i].split("|").map((id) => {
+                    return orgNodes.find((node) => node.id === id);
+                  }),
+          }; 
+        } else{
+            datum = {
+            ...datum,
+            [dataKeys[i]]: cells[i],
+          }
+        }
+      }
+      return datum
+    });
+
+    console.log(newData)
+
+    setData((prevData) => [...newData, ...prevData]);
+  }, [orgNodes]);
+
+  const onKeyDown = useCallback(
+    (e) => {
+      if (e.key === "c" && (e.ctrlKey || e.metaKey)) {
+        const copyText = copySelection();
+        navigator.clipboard.writeText(copyText).then(() => {
+          console.log("Copied to clipboard");
+        });
+      } else if (e.key === "v" && (e.ctrlKey || e.metaKey)) {
+        navigator.clipboard.readText().then((pasteText) => {
+          pasteData(pasteText);
+        });
+      }
+    },
+    [copySelection, pasteData]
+  );
 
   const getRowThemeOverride = useCallback((row) => {
     return {
@@ -364,8 +389,8 @@ export default function SuppliersPage() {
 
       <div className="h-[36px]" />
       <div
-        className="w-[100%] h-[calc(100vh-380px)] rounded-xl overflow-clip mx-auto bg-white relative"
-        // onKeyDown={onKeyDown}
+        className="w-[100%] h-[calc(100vh-401px)] rounded-xl overflow-clip mx-auto bg-white relative"
+        onKeyDown={onKeyDown}
         tabIndex={0}
       >
         <DataEditor
@@ -382,8 +407,8 @@ export default function SuppliersPage() {
           rows={data.length}
           getCellContent={getCellContent}
           onCellEdited={onCellEdited}
-          // gridSelection={gridSelection}
-          // onGridSelectionChange={setGridSelection}
+          gridSelection={gridSelection}
+          onGridSelectionChange={setGridSelection}
           height={"100%"}
           width={"100%"}
           theme={customTheme}
@@ -424,7 +449,7 @@ export default function SuppliersPage() {
           {isSuppliersLoading !== false || isSuppliersUpdating || isSuppliersCreating || isSuppliersDeleting ? <RecordsLoader /> : null}
       </div>
 
-      <div className="h-[16px]" />
+      <div className="h-[36px]" />
       <div className="flex justify-end">
         {data.reduce((accum, curr) => accum + (curr.select ? 1 : 0), 0) === 0 ? null : (
           <div
@@ -456,9 +481,14 @@ export default function SuppliersPage() {
               }
               
               const invalidColumns = getInvalidColumns(data[i])
-              if(invalidColumns.length > 0) 
+              if(invalidColumns.length > 0) {
+                toast(`Please fill the ${toOrdinal(invalidColumns[0])} column of ${toOrdinal(i)} row with appropriate data.`, {
+                  type: "error",
+                  autoClose: 5000,
+                });
                 return gridRef.current.scrollTo(invalidColumns[0], i)             
-              
+              }
+
               validData.push(data[i])
             }
 
@@ -544,4 +574,10 @@ function getInvalidColumns(datum) {
 function isEmailValid(email) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
+}
+
+function toOrdinal(number) {
+  const suffixes = ['th', 'st', 'nd', 'rd'];
+  const v = number % 100;
+  return number + (suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0]);
 }

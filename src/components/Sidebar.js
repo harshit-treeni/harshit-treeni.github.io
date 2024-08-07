@@ -325,7 +325,7 @@ export default function Sidebar() {
             <>
               <NavItem
                 Icon={TVIcon}
-                label="Strategy"
+                label="Strategy Enablement"
                 onClick={() => dispatch({ type: "strat click expanded" })}
               />
               {nav.strat
@@ -485,7 +485,7 @@ const SidebarHeader = ({ isCollapsed }) => {
         }
       )}
     >
-      {/* <WiproLogo
+      <WiproLogo
         className="cursor-pointer"
         onClick={() => {
           window.parent.postMessage(
@@ -493,11 +493,11 @@ const SidebarHeader = ({ isCollapsed }) => {
             "*"
           );
         }}
-      /> */}
+      />
       
-      <img 
+      {/* <img 
         className="h-[48px]"
-        src={logoPlaceholder} alt="Logo" />
+        src={logoPlaceholder} alt="Logo" /> */}
 
       {isCollapsed ? <div className="h-[28px]" /> : null}
 
